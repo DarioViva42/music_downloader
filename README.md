@@ -1,7 +1,7 @@
 # music_downloader
 This is a simple script that downloads songs automatically and tags them with information found on genius.com.
 
-# id3 tags
+## id3 Tags
 The resulting songs will be mp3's with id3 2.3 tags for compatibility reasons with windows 10.
 Although Windows 10 should support v2.4 since the anniversary edition, it still gave me too much headaches.
 
@@ -16,35 +16,33 @@ Fallowing Frames are filled with information:
 - USLT unsynchronized Lyrics
 - APIC Cover-Front
 
-# Genius bearer token
+## Genius bearer token
 If you want to use this software head over to genius and create a developer account. https://genius.com/developers
 Once logged in set up a new API Client and generate an Access Token.
 Replace <access_token> on line 26 in the script with your generated Token.
 
-# requirements
-To be able to run this script you need python 3.6+.
+## Requirements and Dependencies
+To be able to run this script you need python 3.7+.
 You can download python from their website. https://www.python.org/downloads/
 
 Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:
-- PIL
+- **Pillow** (https://pypi.org/project/Pillow/)
 for handling cover images
-- bs4
+- **beautifulsoup4** (https://pypi.org/project/beautifulsoup4/)
 for easy-searching in html documents
-- youtube_dl
+- **youtube_dl** (https://pypi.org/project/youtube_dl/)
 for downloading and searching youtube-videos
-- pydup
-for cutting andconverting audio-files
-- tkinter
-for providing a nice user-interface
-- mutagen
+- **pydub** (https://pypi.org/project/pydub/)
+for cutting and converting audio-files
+- **mutagen** (https://pypi.org/project/mutagen/)
 for taging mp3-files with id3 tags
 
 You can install all these packages with pip or or conda using "pip install <package_name>" or "conda install <package_name>" respectively.
 
-# usage
+## Usage
 Start the script with typing "python downloader.py" in the console.
 A filedialog asks you to locate the text-file containing your songs. This is a new-line delimited "*.txt".
 The lines in this file can either be search queries or relative genius-paths (ommit the genius-domain).
