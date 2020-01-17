@@ -23,7 +23,7 @@ from json.decoder import JSONDecodeError
 base_url = 'https://genius.com'
 search_url = "https://api.genius.com/search"
 
-token = 'ZN0xOHiO7vRp58g3QI6493v-KGBzCCmVzjhE2txKjMOpgHTgQV4Wn51voc_0WC1F'
+token = '<access_token>'
 bearer_token = f'Bearer {token}'
 
 headers = {'Authorization': bearer_token}
