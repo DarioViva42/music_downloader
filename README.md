@@ -40,10 +40,10 @@ for cutting and converting audio-files
 - **mutagen** (https://pypi.org/project/mutagen/)
 for taging mp3-files with id3 tags
 
-You can install all these packages with pip or or conda using "pip install <package_name>" or "conda install <package_name>" respectively.
+You can install all these packages with pip or or conda using `pip install <package_name>` or `conda install <package_name>` respectively.
 
 ## Usage
-Start the script with typing "python downloader.py" in the console.
+Start the script with typing `python downloader.py` in the console.
 A filedialog asks you to locate the text-file containing your songs. This is a new-line delimited "*.txt".
 The lines in this file can either be search queries or relative genius-paths (ommit the genius-domain).
 That means lines starting with a slash are interpreted as paths and all other lines function as search-queries.
