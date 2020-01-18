@@ -25,20 +25,15 @@ When you run the script the first time, it will ask you to enter your generated 
 To be able to run this script you need python 3.7+.
 You can download python from their website. https://www.python.org/downloads/
 
-Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/
+Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/ \n
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:
-- **Pillow** (https://pypi.org/project/Pillow/)
-for handling cover images
-- **beautifulsoup4** (https://pypi.org/project/beautifulsoup4/)
-for easy-searching in html documents
-- **youtube_dl** (https://pypi.org/project/youtube_dl/)
-for downloading and searching youtube-videos
-- **pydub** (https://pypi.org/project/pydub/)
-for cutting and converting audio-files
-- **mutagen** (https://pypi.org/project/mutagen/)
-for taging mp3-files with id3 tags
+- **Pillow** for handling cover images. https://pypi.org/project/Pillow/
+- **beautifulsoup4** for easy-searching in html documents. https://pypi.org/project/beautifulsoup4/
+- **youtube_dl** for downloading and searching youtube-videos. https://pypi.org/project/youtube_dl/
+- **pydub** for cutting and converting audio-files. https://pypi.org/project/pydub/
+- **mutagen** for taging mp3-files with id3 tags. https://pypi.org/project/mutagen/
 
 You can install all these packages with pip or or conda using `pip install <package_name>` or `conda install <package_name>` respectively.
 
