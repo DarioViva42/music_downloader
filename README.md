@@ -22,10 +22,11 @@ Once logged in set up a new API Client and generate an Access Token.
 When you run the script the first time, it will ask you to enter your generated Token, wich then gets saved so you dont need to enter it the next time.
 
 ## Requirements and Dependencies
-To be able to run this script you need python 3.7+.
-You can download python from their website. https://www.python.org/downloads/
+To be able to run this script you need python 3.7+.   
+You can download python from their website. 
+https://www.python.org/downloads/
 
-Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/   
+Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/download.html   
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:
@@ -35,7 +36,7 @@ Fallowing packages are requered to be installed:
 - **pydub** for cutting and converting audio-files. https://pypi.org/project/pydub/
 - **mutagen** for taging mp3-files with id3 tags. https://pypi.org/project/mutagen/
 
-You can install all these packages with pip or or conda using `pip install <package_name>` or `conda install <package_name>` respectively.
+You can install all these packages with pip or or conda using `pip install <package_name>` or <code>conda&nbsp;install&nbsp;<package_name></code> respectively.
 
 ## Usage
 Start the script with typing `python downloader.py` in the console.
