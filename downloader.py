@@ -45,7 +45,8 @@ options = {
   'noplaylist' : True     # only download single song, not playlist
 }
 
-added_songs = []
+album_ids = list()
+added_songs = list()
 
 def rep_chars(s):
     if type(s) == list:
@@ -74,10 +75,17 @@ def search_api(user_in):
     print(user_in, end = '')
     while True:
         params  = {'q': user_in}
-    
-        r = get(search_url, params=params, headers=headers)
-        if r.status_code != 200:
-            raise ValueError('Can not connect to Genius-API.')
+        while True:
+            try: 
+                r = get(search_url, params=params, headers=headers)
+            except ConnectionError:
+                sleep(1)
+                print('Can not connect to Genius-API. Trying again...')
+                continue
+            if r.status_code != 200:
+                sleep(1)
+                print('Can not connect to Genius-API. Trying again...')
+            else: break
         
         search_results = r.json()['response']['hits']
         search_results = [e['result']['path'] for e in search_results]
@@ -103,7 +111,11 @@ def get_info(song_path):
     print(song_path)
     URL = base_url + song_path
     while True:
-        page = get(URL)
+        try: page = get(URL)
+        except ConnectionError: 
+            sleep(1)
+            print('Connection problems. Trying again...')
+            continue
         if page.status_code == 200:
             html = BeautifulSoup(page.text, "html.parser")
             song_info = html.find("meta", {"itemprop":"page_data"})
@@ -114,6 +126,7 @@ def get_info(song_path):
             except JSONDecodeError:
                 print('    Genius has a problem with this song!')
                 return None
+        sleep(1)
         print('Connection problems. Trying again...')
 
 def get_picture(picture_url):  #Image.open(BytesIO(picture))
@@ -236,10 +249,14 @@ def create_song(song_info, suppress = False):
         tracks = [(*e, i) for i, e in enumerate(tracks)]
         album_track = [(e[0], e[3]) for e in tracks 
                        if song_path == e[1]]
+        album_id = album['id']
         if len(album_track) and album_track[0][0]:
             album_track = album_track[0]
-            if not suppress:
+            if not (suppress or album_id in album_ids):
                 add_songs(tracks, album_track, album_name, album_artist)
+                # Remember albums,
+                # so that the user doesn't need to choose multiple times
+                album_ids.append(album_id)
             album_track = f'{album_track[0]}/{len(tracks)}'
         else:
             album_name = title + ' - Single'
