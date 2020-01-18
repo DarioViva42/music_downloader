@@ -107,7 +107,10 @@ def get_info(song_path):
         if page.status_code == 200:
             html = BeautifulSoup(page.text, "html.parser")
             song_info = html.find("meta", {"itemprop":"page_data"})
-            try: return loads(unescape(song_info.attrs['content']))
+            try: 
+                json_string = song_info.attrs['content']
+                json_string = json_string.replace('&quot;', '\\&quot;')
+                return loads(unescape(json_string))
             except JSONDecodeError:
                 print('    Genius has a problem with this song!')
                 return None
@@ -293,12 +296,13 @@ print()
 for song_info in song_infos:
     create_song(song_info)
 
-print('\n\nGet information about additional songs...')
-added_infos = [get_info(e) for e in added_songs]
-added_infos = [e for e in added_infos if e]
-print()
-for song_info in added_infos:
-    create_song(song_info, suppress = True)
+if added_songs:
+    print('\n\nGet information about additional songs...')
+    added_infos = [get_info(e) for e in added_songs]
+    added_infos = [e for e in added_infos if e]
+    print()
+    for song_info in added_infos:
+        create_song(song_info, suppress = True)
 
 for item in listdir():
     if item.endswith(".webm"):
