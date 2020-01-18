@@ -13,7 +13,7 @@ from requests import get
 from html import unescape
 from bs4 import BeautifulSoup
 from pydub import AudioSegment
-from os.path import isfile, isdir
+from os.path import isfile, dirname, abspath
 from os import environ, chdir, listdir, remove
 from youtube_dl import DownloadError, YoutubeDL
 from tkinter import Tk, Checkbutton, IntVar, DISABLED, NORMAL, filedialog
@@ -23,7 +23,18 @@ from json.decoder import JSONDecodeError
 base_url = 'https://genius.com'
 search_url = "https://api.genius.com/search"
 
-token = '<access_token>'
+# Change directoy to the script's location
+chdir(dirname(abspath(__file__)))
+
+if isfile('token'):
+    with open('token', 'rb') as file:
+        token = file.read().decode('ascii')
+else:
+    token = input('Please, input your genius access-token.\n')
+    with open('token', 'wb') as file:
+        print()
+        file.write(token.encode('ascii'))
+
 bearer_token = f'Bearer {token}'
 
 headers = {'Authorization': bearer_token}
@@ -60,7 +71,7 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     
 def search_api(user_in):
     if user_in[0] == '/': return user_in
-    print(user_in)
+    print(user_in, end = '')
     while True:
         params  = {'q': user_in}
     
@@ -74,12 +85,18 @@ def search_api(user_in):
                           if e[:15] != '/Screen-genius-']
         if len(search_results):
             top_result = search_results[0]
-            print(top_result + '\n')
+            correction = input(top_result + '\n')
+            if len(correction):
+                print()
+                return correction
             return top_result
         try:
             user_in = user_in[user_in.index(' '):].lstrip()
         except ValueError:
-            print('No song found with this query...')
+            correction = input('No song found with this query...\n')
+            if len(correction):
+                print()
+                return correction
             return None
 
 def get_info(song_path):
@@ -182,9 +199,9 @@ def open_file(directory = False):
     else:
         if directory: chdir(file_path)
         else:
-            file = open(file_path, "r", encoding="utf-8")
-            content = file.read()
-            return content.split('\n')
+            with open(file_path, "r", encoding="utf-8") as file:
+                content = file.read()
+            return content.splitlines()
 
 def create_song(song_info, suppress = False):
     song_path = song_info['song']['path']

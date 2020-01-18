@@ -17,9 +17,9 @@ Fallowing Frames are filled with information:
 - APIC Cover-Front
 
 ## Genius bearer token
-If you want to use this software head over to genius and create a developer account. https://genius.com/developers
+If you want to use this software head over to genius and create a developer account. https://genius.com/developers \n
 Once logged in set up a new API Client and generate an Access Token.
-Replace <access_token> on line 26 in the script with your generated Token.
+When you run the script the first time, it will ask you to enter your generated Token, wich then gets saved so you dont need to enter it the next time.
 
 ## Requirements and Dependencies
 To be able to run this script you need python 3.7+.
