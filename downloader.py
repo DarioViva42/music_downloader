@@ -5,7 +5,6 @@ Created on Fri Nov 29 23:32:02 2019
 @author: DarioViva
 """
 
-from PIL import Image
 from io import BytesIO
 from time import sleep
 from json import loads
@@ -13,11 +12,14 @@ from requests import get
 from html import unescape
 from bs4 import BeautifulSoup
 from pydub import AudioSegment
+from PIL import Image, ImageTk
 from os.path import isfile, dirname, abspath
 from os import environ, chdir, listdir, remove
 from youtube_dl import DownloadError, YoutubeDL
-from tkinter import Tk, Checkbutton, IntVar, DISABLED, NORMAL, filedialog
-from mutagen.id3 import ID3, APIC, USLT, TIT2, TPE1, TRCK, TALB, TCON, TPE2, TDRC
+from mutagen.id3 import (ID3, APIC, USLT, TIT2, TPE1, 
+                         TRCK, TALB, TCON, TPE2, TDRC)
+from tkinter import (Tk, Checkbutton, IntVar, LEFT, RIGHT, 
+                     filedialog, Label, Frame, DISABLED, NORMAL)
 from json.decoder import JSONDecodeError
 
 base_url = 'https://genius.com'
@@ -121,7 +123,7 @@ def get_info(song_path):
             song_info = html.find("meta", {"itemprop":"page_data"})
             try: 
                 json_string = song_info.attrs['content']
-                json_string = json_string.replace('&quot;', '\\&quot;')
+                json_string = json_string.replace('&quot;', '\\"')
                 return loads(unescape(json_string))
             except JSONDecodeError:
                 print('    Genius has a problem with this song!')
@@ -130,17 +132,26 @@ def get_info(song_path):
         print('Connection problems. Trying again...')
 
 def get_picture(picture_url):  #Image.open(BytesIO(picture))
-    picture = get(picture_url)
-    picture = Image.open(BytesIO(picture.content))
-    picture = picture.resize((500, 500), Image.LANCZOS)
-    imgByteArr = BytesIO()
-    picture.save(imgByteArr, format='JPEG')
-    return imgByteArr.getvalue()
+    while True:
+        try:
+            picture = get(picture_url)
+            picture = Image.open(BytesIO(picture.content))
+            picture = picture.resize((500, 500), Image.LANCZOS)
+            imgByteArr = BytesIO()
+            picture.save(imgByteArr, format='JPEG')
+            return imgByteArr.getvalue()
+        except OSError: pass
 
 # collect urls about other songs in album
-def add_songs(tracks, album_track, album_name, album_artist):
+def add_songs(tracks, album_track, album_name, album_artist, album_cover):
     root = Tk()
-    root.title(f'{album_name} - {album_artist}')
+    root.title('Album-Menu')
+    root.maxsize(250, 1080)
+    
+    render = Image.open(BytesIO(album_cover))
+    render = ImageTk.PhotoImage(render.resize((250, 250)))
+    img = Label(root, image=render)
+    img.pack(anchor = 'n')
 
     box_values = [(IntVar(value = 1), DISABLED) 
                   if n == album_track[0] 
@@ -148,11 +159,16 @@ def add_songs(tracks, album_track, album_name, album_artist):
                   for n, p, t, i in tracks]
 
     for n, p, t, i in tracks:
-        l = Checkbutton(root, 
-                        text=f"{n}. {t}", 
+        frame = Frame(root)
+        c = Checkbutton(frame, text = f"{n:02}.", 
                         variable=box_values[i][0], 
                         state = box_values[i][1])
-        l.pack(anchor = 'w')
+        c.pack(side = LEFT, anchor = 'n')
+        song_title = Label(frame, text=t, wraplength = 200, justify=LEFT)
+        song_title.pack(side = RIGHT)
+        frame.pack(anchor = 'w')
+
+    root.resizable(False, False)
     root.mainloop()
     
     box_values[album_track[1]][0].set(0)
@@ -242,7 +258,7 @@ def create_song(song_info, suppress = False):
         album_name = rep_chars(album['name'])
         album_artist = rep_chars(album['artist']['name'])
         album_year = album['release_date_components']['year']
-        album_cover = album['cover_art_url']
+        album_cover = get_picture(album['cover_art_url'])
         tracks = song_info['primary_album_tracks']
         tracks = [(e['number'], e['song']['path'], e['song']['title'])
                   for e in tracks if e['number']]
@@ -250,10 +266,11 @@ def create_song(song_info, suppress = False):
         album_track = [(e[0], e[3]) for e in tracks 
                        if song_path == e[1]]
         album_id = album['id']
-        if len(album_track) and album_track[0][0]:
+        if album_track and album_track[0][0]:
             album_track = album_track[0]
             if not (suppress or album_id in album_ids):
-                add_songs(tracks, album_track, album_name, album_artist)
+                add_songs(tracks, album_track, album_name, 
+                          album_artist, album_cover)
                 # Remember albums,
                 # so that the user doesn't need to choose multiple times
                 album_ids.append(album_id)
@@ -262,13 +279,13 @@ def create_song(song_info, suppress = False):
             album_name = title + ' - Single'
             album_artist = artist
             album_year = song_year
-            album_cover = song_cover
+            album_cover = get_picture(song_cover)
             album_track = '1/1'
     else:
         album_name = title + ' - Single'
         album_artist = artist
         album_year = song_year
-        album_cover = song_cover
+        album_cover = get_picture(song_cover)
         album_track = '1/1'
     
     lyrics = song_info['lyrics_data']['body']['html']
@@ -287,13 +304,8 @@ def create_song(song_info, suppress = False):
         youtube_start = 0
         search_youtube(song_id, title, artists)
     
-    while True:
-        try:
-            cover = get_picture(album_cover)
-            break
-        except OSError: pass
     cut_video(song_id, youtube_start)
-    addID3(song_id, cover, lyrics, genre, artists, title, 
+    addID3(song_id, album_cover, lyrics, genre, artists, title, 
            str(album_year), album_name, album_artist, album_track)
 
 
