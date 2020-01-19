@@ -161,16 +161,12 @@ def add_songs(tracks, mapping, album_name, album_artist, album_cover):
         canvas = Canvas(container, width = 230, height = 500)
         scrollbar = Scrollbar(container, orient="vertical", 
                               command=canvas.yview)
-        canvas.bind_all(
-            "<MouseWheel>", 
-            lambda e: canvas.yview_scroll(-1*(int(e.delta/120)), "units")
-        )
+        canvas.bind_all("<MouseWheel>", 
+            lambda e: canvas.yview_scroll(-1*(int(e.delta/120)), "units"))
         
         scrollable_frame = Frame(canvas)
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
+        scrollable_frame.bind("<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="w")
         canvas.configure(yscrollcommand=scrollbar.set)
     
@@ -288,17 +284,14 @@ def create_song(song_info, mapping = None, suppress = False):
     print('\n' + song_path)
     title = rep_chars(song_info['song']['title'])
     song_id = song_info['song']['id']
-    
     artist = rep_chars(song_info['song']['primary_artist']['name'])
     artists = rep_chars(song_info['dmp_data_layer']['page']['artists'])
     if artist in artists:
         artists.remove(artist)
         artists = [artist, *artists]
-    
     song_cover = song_info['song']['song_art_image_url']
     song_year = song_info['song']['release_date_components']
-    if song_year: song_year = song_year['year']
-    else: song_year = 9999
+    song_year = song_year['year'] if song_year else 9999
     genre = rep_chars(song_info['song']['primary_tag']['name'])
     
     # find out if song appears in an album
@@ -315,17 +308,13 @@ def create_song(song_info, mapping = None, suppress = False):
             if not (suppress or album_id in album_ids):
                 add_songs(tracks, mapping[album_id], album_name, 
                           album_artist, album_cover)
-                # Remember albums,
-                # so that the user doesn't need to choose multiple times
-                album_ids.append(album_id)
-            album_track = f'{album_track[0]}/{len(tracks)}'
-        else:
-            album_name = title + ' - Single'
-            album_artist = artist
-            album_year = song_year
-            album_cover = get_picture(song_cover)
-            album_track = '1/1'
-    else:
+                
+                album_ids.append(album_id) # Remember albums
+                
+            album_length = max([e[0] for e in tracks])
+            album_track = f'{album_track[0]}/{album_length}'
+        else: album = None
+    if not album:
         album_name = title + ' - Single'
         album_artist = artist
         album_year = song_year
@@ -339,12 +328,9 @@ def create_song(song_info, mapping = None, suppress = False):
         youtube_url = song_info['song']['youtube_url']
         youtube_start = song_info['song']['youtube_start']
         youtube_start = int(youtube_start) if youtube_start else 0
-        try:
-            get_youtube(song_id, youtube_url)
-        except DownloadError:
-            youtube_start = 0
-            search_youtube(song_id, title, artists)
-    else:
+        try: get_youtube(song_id, youtube_url)
+        except DownloadError: song_info['song']['youtube_url'] = None
+    if not song_info['song']['youtube_url']:
         youtube_start = 0
         search_youtube(song_id, title, artists)
     
