@@ -30,10 +30,11 @@ Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/d
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:
-- **Pillow** for handling cover images. https://pypi.org/project/Pillow/
+- **requests** for making requests to the internet. https://pypi.org/project/requests/
 - **beautifulsoup4** for easy-searching in html documents. https://pypi.org/project/beautifulsoup4/
-- **youtube_dl** for downloading and searching youtube-videos. https://pypi.org/project/youtube_dl/
 - **pydub** for cutting and converting audio-files. https://pypi.org/project/pydub/
+- **Pillow** for handling cover images. https://pypi.org/project/Pillow/
+- **youtube_dl** for downloading and searching youtube-videos. https://pypi.org/project/youtube_dl/
 - **mutagen** for taging mp3-files with id3 tags. https://pypi.org/project/mutagen/
 
 You can install all these packages with pip or or conda using `pip install <package_name>` or <code>conda&nbsp;install&nbsp;<package_name></code> respectively.
