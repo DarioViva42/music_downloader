@@ -56,7 +56,7 @@ options = {
 }
 
 album_ids = list()
-added_songs = list()
+added_songs = dict()
 
 def rep_chars(s):
     if type(s) == list:
@@ -136,6 +136,9 @@ def get_info(song_path):
             except JSONDecodeError:
                 print('    Genius has a problem with this song!')
                 return None
+        if page.status_code == 404:
+            print('    Genius can not find this song!')
+            return None
         sleep(1)
         print('Connection problems. Trying again...')
 
@@ -151,7 +154,7 @@ def get_picture(picture_url):  #Image.open(BytesIO(picture))
         except OSError: pass
 
 # collect urls about other songs in album
-def add_songs(tracks, mapping, album_name, album_artist, album_cover):
+def add_songs(tracks, mapping, album, track, album_cover):
     root = Tk()
     root.title('Album-Menu')
     root.maxsize(250, 1000)
@@ -207,8 +210,8 @@ def add_songs(tracks, mapping, album_name, album_artist, album_cover):
         
     song_paths = [p for n, p, t, i in tracks 
                   if box_values[i][0].get()]
-    global added_songs
-    added_songs += song_paths
+    for song in song_paths:
+        added_songs[song] = (album, tracks, track)
 
 def get_youtube(song_id, youtube_url):
     options['outtmpl'] = f'{song_id}.webm'
@@ -268,7 +271,10 @@ def open_file(directory = False):
                 content = file.read()
             return content.splitlines()
 
-def get_track(tracks, song_path):
+def get_track(song_info):
+    tracks = song_info['primary_album_tracks']
+    song_path = song_info['song']['path']
+    
     tracks = [(e['number'], e['song']['path'], e['song']['title'])
               for e in tracks if e['number']]
     tracks = [(*e, i) for i, e in enumerate(tracks)]
@@ -279,7 +285,7 @@ def get_track(tracks, song_path):
         
     return tracks, album_track
 
-def create_song(song_info, mapping = None, suppress = False):
+def create_song(song_info, mapping = None, xt = None):
     song_path = song_info['song']['path']
     print('\n' + song_path)
     title = rep_chars(song_info['song']['title'])
@@ -295,31 +301,30 @@ def create_song(song_info, mapping = None, suppress = False):
     genre = rep_chars(song_info['song']['primary_tag']['name'])
     
     # find out if song appears in an album
-    album = song_info['song']['album']
+    album = xt[0] if xt else song_info['song']['album']
     if album:
         album_name = rep_chars(album['name'])
         album_artist = rep_chars(album['artist']['name'])
         album_year = album['release_date_components']['year']
-        album_cover = get_picture(album['cover_art_url'])
-        tracks = song_info['primary_album_tracks']
-        tracks, album_track = get_track(tracks, song_path)
+        cover = get_picture(album['cover_art_url'])
+        tracks, track = (xt[1], xt[2]) if xt else get_track(song_info)
         album_id = album['id']
-        if album_track:
-            if not (suppress or album_id in album_ids):
-                add_songs(tracks, mapping[album_id], album_name, 
-                          album_artist, album_cover)
+        if track:
+            if not (xt or album_id in album_ids):
+                add_songs(tracks, mapping[album_id], album, track, cover)
                 
                 album_ids.append(album_id) # Remember albums
                 
             album_length = max([e[0] for e in tracks])
-            album_track = f'{album_track[0]}/{album_length}'
+            track = f'{track[0]}/{album_length}'
         else: album = None
+        
     if not album:
         album_name = title + ' - Single'
         album_artist = artist
         album_year = song_year
-        album_cover = get_picture(song_cover)
-        album_track = '1/1'
+        cover = get_picture(song_cover)
+        track = '1/1'
     
     lyrics = song_info['lyrics_data']['body']['html']
     lyrics = BeautifulSoup(lyrics, "html.parser").get_text().strip()
@@ -330,13 +335,14 @@ def create_song(song_info, mapping = None, suppress = False):
         youtube_start = int(youtube_start) if youtube_start else 0
         try: get_youtube(song_id, youtube_url)
         except DownloadError: song_info['song']['youtube_url'] = None
+        
     if not song_info['song']['youtube_url']:
         youtube_start = 0
         search_youtube(song_id, title, artists)
     
     cut_video(song_id, youtube_start)
-    addID3(song_id, album_cover, lyrics, genre, artists, title, 
-           str(album_year), album_name, album_artist, album_track)
+    addID3(song_id, cover, lyrics, genre, artists, title, 
+           str(album_year), album_name, album_artist, track)
 
 
 input_list = open_file()
@@ -352,8 +358,7 @@ print('\nGet information about the songs...')
 song_infos = [get_info(e) for e in song_paths]
 song_infos = [e for e in song_infos if e]
 
-album_list = [(e['song']['album']['id'], 
-               get_track(e['primary_album_tracks'], e['song']['path'])[1]) 
+album_list = [(e['song']['album']['id'], get_track(e)[1]) 
               for e in song_infos if 'primary_album_tracks' in e]
 album_list = [e for e in album_list if e[1]]
 
@@ -363,16 +368,16 @@ for i, j in album_list:
     else: album_mapping[i].append(j)
 
 print()
-for song_info in song_infos:
-    create_song(song_info, mapping = album_mapping)
+for info in song_infos:
+    create_song(info, mapping = album_mapping)
 
 if added_songs:
     print('\n\nGet information about additional songs...')
-    added_infos = [get_info(e) for e in added_songs]
-    added_infos = [e for e in added_infos if e]
+    added_infos = [(e, get_info(e)) for e in added_songs]
+    added_infos = [e for e in added_infos if e[1]]
     print()
-    for song_info in added_infos:
-        create_song(song_info, suppress = True)
+    for song_path, song_info in added_infos:
+        create_song(song_info, xt = added_songs[song_path])
 
 for item in listdir():
     if item.endswith(".webm"):
