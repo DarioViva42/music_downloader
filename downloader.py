@@ -18,8 +18,8 @@ from os import environ, chdir, listdir, remove
 from youtube_dl import DownloadError, YoutubeDL
 from mutagen.id3 import (ID3, APIC, USLT, TIT2, TPE1, 
                          TRCK, TALB, TCON, TPE2, TDRC)
-from tkinter import (Tk, Checkbutton, IntVar, LEFT, RIGHT, 
-                     filedialog, Label, Frame, DISABLED, NORMAL)
+from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas, 
+                     filedialog, Frame, DISABLED, NORMAL, Scrollbar)
 from json.decoder import JSONDecodeError
 
 try:
@@ -154,7 +154,25 @@ def get_picture(picture_url):  #Image.open(BytesIO(picture))
 def add_songs(tracks, mapping, album_name, album_artist, album_cover):
     root = Tk()
     root.title('Album-Menu')
-    root.maxsize(250, 1080)
+    root.maxsize(250, 1000)
+    
+    if len(tracks) > 20:
+        container = Frame(root)
+        canvas = Canvas(container, width = 230, height = 500)
+        scrollbar = Scrollbar(container, orient="vertical", 
+                              command=canvas.yview)
+        canvas.bind_all(
+            "<MouseWheel>", 
+            lambda e: canvas.yview_scroll(-1*(int(e.delta/120)), "units")
+        )
+        
+        scrollable_frame = Frame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="w")
+        canvas.configure(yscrollcommand=scrollbar.set)
     
     render = Image.open(BytesIO(album_cover))
     render = ImageTk.PhotoImage(render.resize((250, 250)))
@@ -170,15 +188,21 @@ def add_songs(tracks, mapping, album_name, album_artist, album_cover):
                   for n, p, t, i in tracks]
 
     for n, p, t, i in tracks:
-        frame = Frame(root)
+        frame = Frame(scrollable_frame if len(tracks) > 20 else root)
         c = Checkbutton(frame, text = f"{n:02}.", 
                         variable=box_values[i][0], 
                         state = box_values[i][1])
-        c.pack(side = LEFT, anchor = 'n')
-        song_title = Label(frame, text=t, wraplength = 200, justify=LEFT)
-        song_title.pack(side = RIGHT)
+        c.pack(side = 'left', anchor = 'n')
+        song_title = Label(frame, text=t, justify='left', 
+                           wraplength = 180 if len(tracks) > 20 else 200)
+        song_title.pack(side = 'right')
         frame.pack(anchor = 'w')
-
+        
+    if len(tracks) > 20:
+        container.pack(anchor = 'w')
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
     root.resizable(False, False)
     root.mainloop()
     
