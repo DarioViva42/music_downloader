@@ -22,6 +22,14 @@ from tkinter import (Tk, Checkbutton, IntVar, LEFT, RIGHT,
                      filedialog, Label, Frame, DISABLED, NORMAL)
 from json.decoder import JSONDecodeError
 
+try:
+    if get_ipython().__class__.__module__ == 'ipykernel.zmqshell':
+        NEW_LINE = ''
+    else:
+        NEW_LINE = '\n'
+except NameError:
+    NEW_LINE = '\n'
+
 base_url = 'https://genius.com'
 search_url = "https://api.genius.com/search"
 
@@ -74,7 +82,7 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     
 def search_api(user_in):
     if user_in[0] == '/': return user_in
-    print(user_in, end = '')
+    print(user_in, end = NEW_LINE)
     while True:
         params  = {'q': user_in}
         while True:
