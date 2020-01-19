@@ -151,7 +151,7 @@ def get_picture(picture_url):  #Image.open(BytesIO(picture))
         except OSError: pass
 
 # collect urls about other songs in album
-def add_songs(tracks, album_track, album_name, album_artist, album_cover):
+def add_songs(tracks, mapping, album_name, album_artist, album_cover):
     root = Tk()
     root.title('Album-Menu')
     root.maxsize(250, 1080)
@@ -160,9 +160,12 @@ def add_songs(tracks, album_track, album_name, album_artist, album_cover):
     render = ImageTk.PhotoImage(render.resize((250, 250)))
     img = Label(root, image=render)
     img.pack(anchor = 'n')
+    
+    mapping_display = [e[0] for e in mapping]
+    mapping_index   = [e[1] for e in mapping]
 
     box_values = [(IntVar(value = 1), DISABLED) 
-                  if n == album_track[0] 
+                  if n in mapping_display
                   else (IntVar(value = 0), NORMAL) 
                   for n, p, t, i in tracks]
 
@@ -179,7 +182,9 @@ def add_songs(tracks, album_track, album_name, album_artist, album_cover):
     root.resizable(False, False)
     root.mainloop()
     
-    box_values[album_track[1]][0].set(0)
+    for e in mapping_index:
+        box_values[e][0].set(0)
+        
     song_paths = [p for n, p, t, i in tracks 
                   if box_values[i][0].get()]
     global added_songs
@@ -243,7 +248,18 @@ def open_file(directory = False):
                 content = file.read()
             return content.splitlines()
 
-def create_song(song_info, suppress = False):
+def get_track(tracks, song_path):
+    tracks = [(e['number'], e['song']['path'], e['song']['title'])
+              for e in tracks if e['number']]
+    tracks = [(*e, i) for i, e in enumerate(tracks)]
+    album_track = [(e[0], e[3]) for e in tracks 
+                   if song_path == e[1]]
+    if album_track and album_track[0][0]: album_track = album_track[0]
+    else: album_track = None
+        
+    return tracks, album_track
+
+def create_song(song_info, mapping = None, suppress = False):
     song_path = song_info['song']['path']
     print('\n' + song_path)
     title = rep_chars(song_info['song']['title'])
@@ -251,8 +267,9 @@ def create_song(song_info, suppress = False):
     
     artist = rep_chars(song_info['song']['primary_artist']['name'])
     artists = rep_chars(song_info['dmp_data_layer']['page']['artists'])
-    artists.remove(artist)
-    artists = [artist, *artists]
+    if artist in artists:
+        artists.remove(artist)
+        artists = [artist, *artists]
     
     song_cover = song_info['song']['song_art_image_url']
     song_year = song_info['song']['release_date_components']
@@ -268,16 +285,11 @@ def create_song(song_info, suppress = False):
         album_year = album['release_date_components']['year']
         album_cover = get_picture(album['cover_art_url'])
         tracks = song_info['primary_album_tracks']
-        tracks = [(e['number'], e['song']['path'], e['song']['title'])
-                  for e in tracks if e['number']]
-        tracks = [(*e, i) for i, e in enumerate(tracks)]
-        album_track = [(e[0], e[3]) for e in tracks 
-                       if song_path == e[1]]
+        tracks, album_track = get_track(tracks, song_path)
         album_id = album['id']
-        if album_track and album_track[0][0]:
-            album_track = album_track[0]
+        if album_track:
             if not (suppress or album_id in album_ids):
-                add_songs(tracks, album_track, album_name, 
+                add_songs(tracks, mapping[album_id], album_name, 
                           album_artist, album_cover)
                 # Remember albums,
                 # so that the user doesn't need to choose multiple times
@@ -329,9 +341,20 @@ song_paths = [e for e in song_paths if e]
 print('\nGet information about the songs...')
 song_infos = [get_info(e) for e in song_paths]
 song_infos = [e for e in song_infos if e]
+
+album_list = [(e['song']['album']['id'], 
+               get_track(e['primary_album_tracks'], e['song']['path'])[1]) 
+              for e in song_infos if 'primary_album_tracks' in e]
+album_list = [e for e in album_list if e[1]]
+
+album_mapping = dict()
+for i, j in album_list: 
+    if i not in album_mapping: album_mapping[i] = [j]
+    else: album_mapping[i].append(j)
+
 print()
 for song_info in song_infos:
-    create_song(song_info)
+    create_song(song_info, mapping = album_mapping)
 
 if added_songs:
     print('\n\nGet information about additional songs...')
