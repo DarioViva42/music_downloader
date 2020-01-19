@@ -16,9 +16,9 @@ from PIL import Image, ImageTk
 from os.path import isfile, dirname, abspath
 from os import environ, chdir, listdir, remove
 from youtube_dl import DownloadError, YoutubeDL
-from mutagen.id3 import (ID3, APIC, USLT, TIT2, TPE1, 
+from mutagen.id3 import (ID3, APIC, USLT, TIT2, TPE1,
                          TRCK, TALB, TCON, TPE2, TDRC)
-from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas, 
+from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas,
                      filedialog, Frame, DISABLED, NORMAL, Scrollbar)
 from json.decoder import JSONDecodeError
 
@@ -63,11 +63,11 @@ def rep_chars(s):
         return [e.replace('’', '\'') for e in s]
     return s.replace('’', '\'')
 
-def addID3(song_id, cover, lyrics, genre, artists, title, 
+def addID3(song_id, cover, lyrics, genre, artists, title,
            album_year, album_name, album_artist, album_track):
     audio = ID3(f'{song_id}.mp3')
-    
-    audio['APIC'] = APIC(encoding = 3, mime = 'image/jpeg', 
+
+    audio['APIC'] = APIC(encoding = 3, mime = 'image/jpeg',
                          type = 3, data = cover)
     audio['USLT'] = USLT(encoding = 3, text = lyrics)
     audio['TIT2'] = TIT2(encoding = 3, text = title)
@@ -77,16 +77,16 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     audio['TCON'] = TCON(encoding = 3, text = genre)
     audio['TPE2'] = TPE2(encoding = 3, text = album_artist)
     audio['TDRC'] = TDRC(encoding = 3, text = album_year)
-    
+
     audio.save(v2_version=3, v23_sep='; ')
-    
+
 def search_api(user_in):
     if user_in[0] == '/': return user_in
     print(user_in, end = NEW_LINE)
     while True:
         params  = {'q': user_in}
         while True:
-            try: 
+            try:
                 r = get(search_url, params=params, headers=headers)
             except ConnectionError:
                 sleep(1)
@@ -96,10 +96,10 @@ def search_api(user_in):
                 sleep(1)
                 print('Can not connect to Genius-API. Trying again...')
             else: break
-        
+
         search_results = r.json()['response']['hits']
         search_results = [e['result']['path'] for e in search_results]
-        search_results = [e for e in search_results 
+        search_results = [e for e in search_results
                           if e[:15] != '/Screen-genius-']
         if len(search_results):
             top_result = search_results[0]
@@ -122,14 +122,14 @@ def get_info(song_path):
     URL = base_url + song_path
     while True:
         try: page = get(URL)
-        except ConnectionError: 
+        except ConnectionError:
             sleep(1)
             print('Connection problems. Trying again...')
             continue
         if page.status_code == 200:
             html = BeautifulSoup(page.text, "html.parser")
             song_info = html.find("meta", {"itemprop":"page_data"})
-            try: 
+            try:
                 json_string = song_info.attrs['content']
                 json_string = json_string.replace('&quot;', '\\"')
                 return loads(unescape(json_string))
@@ -158,57 +158,57 @@ def add_songs(tracks, mapping, album, track, album_cover):
     root = Tk()
     root.title('Album-Menu')
     root.maxsize(250, 1000)
-    
+
     if len(tracks) > 20:
         container = Frame(root)
         canvas = Canvas(container, width = 230, height = 500)
-        scrollbar = Scrollbar(container, orient="vertical", 
+        scrollbar = Scrollbar(container, orient="vertical",
                               command=canvas.yview)
-        canvas.bind_all("<MouseWheel>", 
+        canvas.bind_all("<MouseWheel>",
             lambda e: canvas.yview_scroll(-1*(int(e.delta/120)), "units"))
-        
+
         scrollable_frame = Frame(canvas)
         scrollable_frame.bind("<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="w")
         canvas.configure(yscrollcommand=scrollbar.set)
-    
+
     render = Image.open(BytesIO(album_cover))
     render = ImageTk.PhotoImage(render.resize((250, 250)))
     img = Label(root, image=render)
     img.pack(anchor = 'n')
-    
+
     mapping_display = [e[0] for e in mapping]
     mapping_index   = [e[1] for e in mapping]
 
-    box_values = [(IntVar(value = 1), DISABLED) 
+    box_values = [(IntVar(value = 1), DISABLED)
                   if n in mapping_display
-                  else (IntVar(value = 0), NORMAL) 
+                  else (IntVar(value = 0), NORMAL)
                   for n, p, t, i in tracks]
 
     for n, p, t, i in tracks:
         frame = Frame(scrollable_frame if len(tracks) > 20 else root)
-        c = Checkbutton(frame, text = f"{n:02}.", 
-                        variable=box_values[i][0], 
+        c = Checkbutton(frame, text = f"{n:02}.",
+                        variable=box_values[i][0],
                         state = box_values[i][1])
         c.pack(side = 'left', anchor = 'n')
-        song_title = Label(frame, text=t, justify='left', 
+        song_title = Label(frame, text=t, justify='left',
                            wraplength = 180 if len(tracks) > 20 else 200)
         song_title.pack(side = 'right')
         frame.pack(anchor = 'w')
-        
+
     if len(tracks) > 20:
         container.pack(anchor = 'w')
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-    
+
     root.resizable(False, False)
     root.mainloop()
-    
+
     for e in mapping_index:
         box_values[e][0].set(0)
-        
-    song_paths = [p for n, p, t, i in tracks 
+
+    song_paths = [p for n, p, t, i in tracks
                   if box_values[i][0].get()]
     for song in song_paths:
         added_songs[song] = (album, tracks, track)
@@ -240,28 +240,28 @@ def cut_video(song_id, youtube_start):
 def open_file(directory = False):
     root = Tk()
     root.withdraw()
-    
+
     root.overrideredirect(True)
     root.geometry('0x0+0+0')
     root.attributes('-alpha', 0)
-    
+
     root.deiconify()
     root.lift()
     root.focus_force()
-    
+
     if directory:
         file_path = filedialog.askdirectory(
-            parent=root, 
-            initialdir = environ['USERPROFILE'], 
+            parent=root,
+            initialdir = environ['USERPROFILE'],
             title = "Where do you want to save the songs?")
     else:
         file_path = filedialog.askopenfilename(
-            parent=root, 
-            initialdir = environ['USERPROFILE'], 
-            filetypes = (("Text File", "*.txt"),), 
+            parent=root,
+            initialdir = environ['USERPROFILE'],
+            filetypes = (("Text File", "*.txt"),),
             title = "Choose the file in wich your songs are listed...")
     root.destroy()
-    
+
     if file_path == '':
         return open_file(directory)
     else:
@@ -274,15 +274,15 @@ def open_file(directory = False):
 def get_track(song_info):
     tracks = song_info['primary_album_tracks']
     song_path = song_info['song']['path']
-    
+
     tracks = [(e['number'], e['song']['path'], e['song']['title'])
               for e in tracks if e['number']]
     tracks = [(*e, i) for i, e in enumerate(tracks)]
-    album_track = [(e[0], e[3]) for e in tracks 
+    album_track = [(e[0], e[3]) for e in tracks
                    if song_path == e[1]]
     if album_track and album_track[0][0]: album_track = album_track[0]
     else: album_track = None
-        
+
     return tracks, album_track
 
 def create_song(song_info, mapping = None, xt = None):
@@ -299,49 +299,50 @@ def create_song(song_info, mapping = None, xt = None):
     song_year = song_info['song']['release_date_components']
     song_year = song_year['year'] if song_year else 9999
     genre = rep_chars(song_info['song']['primary_tag']['name'])
-    
+
     # find out if song appears in an album
     album = xt[0] if xt else song_info['song']['album']
     if album:
         album_name = rep_chars(album['name'])
         album_artist = rep_chars(album['artist']['name'])
-        album_year = album['release_date_components']['year']
+        album_year = album['release_date_components']
+        album_year = album_year['year'] if album_year else 9999
         cover = get_picture(album['cover_art_url'])
         tracks, track = (xt[1], xt[2]) if xt else get_track(song_info)
         album_id = album['id']
         if track:
             if not (xt or album_id in album_ids):
                 add_songs(tracks, mapping[album_id], album, track, cover)
-                
+
                 album_ids.append(album_id) # Remember albums
-                
+
             album_length = max([e[0] for e in tracks])
             track = f'{track[0]}/{album_length}'
         else: album = None
-        
+
     if not album:
         album_name = title + ' - Single'
         album_artist = artist
         album_year = song_year
         cover = get_picture(song_cover)
         track = '1/1'
-    
+
     lyrics = song_info['lyrics_data']['body']['html']
     lyrics = BeautifulSoup(lyrics, "html.parser").get_text().strip()
-    
+
     if song_info['song']['youtube_url']:
         youtube_url = song_info['song']['youtube_url']
         youtube_start = song_info['song']['youtube_start']
         youtube_start = int(youtube_start) if youtube_start else 0
         try: get_youtube(song_id, youtube_url)
         except DownloadError: song_info['song']['youtube_url'] = None
-        
+
     if not song_info['song']['youtube_url']:
         youtube_start = 0
         search_youtube(song_id, title, artists)
-    
+
     cut_video(song_id, youtube_start)
-    addID3(song_id, cover, lyrics, genre, artists, title, 
+    addID3(song_id, cover, lyrics, genre, artists, title,
            str(album_year), album_name, album_artist, track)
 
 
@@ -358,12 +359,12 @@ print('\nGet information about the songs...')
 song_infos = [get_info(e) for e in song_paths]
 song_infos = [e for e in song_infos if e]
 
-album_list = [(e['song']['album']['id'], get_track(e)[1]) 
+album_list = [(e['song']['album']['id'], get_track(e)[1])
               for e in song_infos if 'primary_album_tracks' in e]
 album_list = [e for e in album_list if e[1]]
 
 album_mapping = dict()
-for i, j in album_list: 
+for i, j in album_list:
     if i not in album_mapping: album_mapping[i] = [j]
     else: album_mapping[i].append(j)
 
