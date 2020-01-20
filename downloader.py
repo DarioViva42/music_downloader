@@ -5,19 +5,17 @@ Created on Fri Nov 29 23:32:02 2019
 @author: DarioViva
 """
 
+from song import Song
+from tqdm import tqdm
 from io import BytesIO
 from time import sleep
 from json import loads
 from requests import get
 from html import unescape
 from bs4 import BeautifulSoup
-from pydub import AudioSegment
 from PIL import Image, ImageTk
 from os.path import isfile, dirname, abspath
 from os import environ, chdir, listdir, remove
-from youtube_dl import DownloadError, YoutubeDL
-from mutagen.id3 import (ID3, APIC, USLT, TIT2, TPE1,
-                         TRCK, TALB, TCON, TPE2, TDRC)
 from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas,
                      filedialog, Frame, DISABLED, NORMAL, Scrollbar)
 from json.decoder import JSONDecodeError
@@ -46,39 +44,25 @@ else:
         file.write(token.encode('ascii'))
 
 bearer_token = f'Bearer {token}'
-
 headers = {'Authorization': bearer_token}
 
-options = {
-  'format': 'bestaudio/best',
-  'extractaudio' : True,  # only keep the audio
-  'noplaylist' : True     # only download single song, not playlist
-}
-
+songs_list = list()
 album_ids = list()
 added_songs = dict()
 
-def rep_chars(s):
-    if type(s) == list:
-        return [e.replace('’', '\'') for e in s]
-    return s.replace('’', '\'')
+def get_track(song_info):
+    tracks = song_info['primary_album_tracks']
+    song_path = song_info['song']['path']
 
-def addID3(song_id, cover, lyrics, genre, artists, title,
-           album_year, album_name, album_artist, album_track):
-    audio = ID3(f'{song_id}.mp3')
+    tracks = [(e['number'], e['song']['path'], e['song']['title'])
+              for e in tracks if e['number']]
+    tracks = [(*e, i) for i, e in enumerate(tracks)]
+    album_track = [(e[0], e[3]) for e in tracks
+                   if song_path == e[1]]
+    if album_track and album_track[0][0]: album_track = album_track[0]
+    else: album_track = None
 
-    audio['APIC'] = APIC(encoding = 3, mime = 'image/jpeg',
-                         type = 3, data = cover)
-    audio['USLT'] = USLT(encoding = 3, text = lyrics)
-    audio['TIT2'] = TIT2(encoding = 3, text = title)
-    audio['TPE1'] = TPE1(encoding = 3, text = artists)
-    audio['TRCK'] = TRCK(encoding = 3, text = album_track)
-    audio['TALB'] = TALB(encoding = 3, text = album_name)
-    audio['TCON'] = TCON(encoding = 3, text = genre)
-    audio['TPE2'] = TPE2(encoding = 3, text = album_artist)
-    audio['TDRC'] = TDRC(encoding = 3, text = album_year)
-
-    audio.save(v2_version=3, v23_sep='; ')
+    return tracks, album_track
 
 def search_api(user_in):
     if user_in[0] == '/': return user_in
@@ -86,16 +70,13 @@ def search_api(user_in):
     while True:
         params  = {'q': user_in}
         while True:
-            try:
-                r = get(search_url, params=params, headers=headers)
+            try: r = get(search_url, params=params, headers=headers)
             except ConnectionError:
                 sleep(1)
-                print('Can not connect to Genius-API. Trying again...')
                 continue
-            if r.status_code != 200:
-                sleep(1)
-                print('Can not connect to Genius-API. Trying again...')
-            else: break
+            if r.status_code == 200:
+                break
+            else: sleep(1)
 
         search_results = r.json()['response']['hits']
         search_results = [e['result']['path'] for e in search_results]
@@ -118,13 +99,11 @@ def search_api(user_in):
             return None
 
 def get_info(song_path):
-    print(song_path)
     URL = base_url + song_path
     while True:
         try: page = get(URL)
         except ConnectionError:
             sleep(1)
-            print('Connection problems. Trying again...')
             continue
         if page.status_code == 200:
             html = BeautifulSoup(page.text, "html.parser")
@@ -134,24 +113,17 @@ def get_info(song_path):
                 json_string = json_string.replace('&quot;', '\\"')
                 return loads(unescape(json_string))
             except JSONDecodeError:
-                print('    Genius has a problem with this song!')
                 return None
         if page.status_code == 404:
-            print('    Genius can not find this song!')
             return None
         sleep(1)
-        print('Connection problems. Trying again...')
 
-def get_picture(picture_url):  #Image.open(BytesIO(picture))
-    while True:
-        try:
-            picture = get(picture_url)
-            picture = Image.open(BytesIO(picture.content))
-            picture = picture.resize((500, 500), Image.LANCZOS)
-            imgByteArr = BytesIO()
-            picture.save(imgByteArr, format='JPEG')
-            return imgByteArr.getvalue()
-        except OSError: pass
+def ask_album(song, mapping):
+    if song.album_id and (song.album_id not in album_ids):
+        add_songs(song.tracks, mapping[song.album_id],
+                  song.album, song.track0, song.cover)
+
+        album_ids.append(song.album_id) # Remember albums
 
 # collect urls about other songs in album
 def add_songs(tracks, mapping, album, track, album_cover):
@@ -213,29 +185,6 @@ def add_songs(tracks, mapping, album, track, album_cover):
     for song in song_paths:
         added_songs[song] = (album, tracks, track)
 
-def get_youtube(song_id, youtube_url):
-    options['outtmpl'] = f'{song_id}.webm'
-    with YoutubeDL(options) as ydl:
-        ydl.download([youtube_url])
-    while not isfile(options['outtmpl']):
-        sleep(1)
-
-def search_youtube(song_id, title, artists):
-    while True:
-        try:
-            options['outtmpl'] = f'{song_id}.webm'
-            with YoutubeDL(options) as ydl:
-                ydl.download([f"ytsearch:{title} {' '.join(artists)}"])
-            while not isfile(options['outtmpl']):
-                sleep(1)
-            break
-        except DownloadError: pass
-
-def cut_video(song_id, youtube_start):
-    sound = AudioSegment.from_file(f'{song_id}.webm')
-    songPart = sound[youtube_start*1000:]
-    songPart.export(f'{song_id}.mp3', format="mp3")
-
 #opens a file-dialog
 def open_file(directory = False):
     root = Tk()
@@ -262,124 +211,78 @@ def open_file(directory = False):
             title = "Choose the file in wich your songs are listed...")
     root.destroy()
 
-    if file_path == '':
-        return open_file(directory)
+    if file_path == '': return open_file(directory)
     else:
         if directory: chdir(file_path)
         else:
             with open(file_path, "r", encoding="utf-8") as file:
                 content = file.read()
-            return content.splitlines()
+            lines = [e for e in content.splitlines()
+                     if not e.isspace()]
+            if lines: return lines
+            else: return open_file()
 
-def get_track(song_info):
-    tracks = song_info['primary_album_tracks']
-    song_path = song_info['song']['path']
+def get_mapping(song_infos):
+    album_list = [(e['song']['album']['id'], get_track(e)[1])
+              for e in song_infos if 'primary_album_tracks' in e]
+    album_list = [e for e in album_list if e[1]]
+    album_mapping = dict()
+    for i, j in album_list:
+        if i not in album_mapping: album_mapping[i] = [j]
+        else: album_mapping[i].append(j)
+    return album_mapping
 
-    tracks = [(e['number'], e['song']['path'], e['song']['title'])
-              for e in tracks if e['number']]
-    tracks = [(*e, i) for i, e in enumerate(tracks)]
-    album_track = [(e[0], e[3]) for e in tracks
-                   if song_path == e[1]]
-    if album_track and album_track[0][0]: album_track = album_track[0]
-    else: album_track = None
-
-    return tracks, album_track
-
-def create_song(song_info, mapping = None, xt = None):
-    song_path = song_info['song']['path']
-    print('\n' + song_path)
-    title = rep_chars(song_info['song']['title'])
-    song_id = song_info['song']['id']
-    artist = rep_chars(song_info['song']['primary_artist']['name'])
-    artists = rep_chars(song_info['dmp_data_layer']['page']['artists'])
-    if artist in artists:
-        artists.remove(artist)
-        artists = [artist, *artists]
-    song_cover = song_info['song']['song_art_image_url']
-    song_year = song_info['song']['release_date_components']
-    song_year = song_year['year'] if song_year else 9999
-    genre = rep_chars(song_info['song']['primary_tag']['name'])
-
-    # find out if song appears in an album
-    album = xt[0] if xt else song_info['song']['album']
-    if album:
-        album_name = rep_chars(album['name'])
-        album_artist = rep_chars(album['artist']['name'])
-        album_year = album['release_date_components']
-        album_year = album_year['year'] if album_year else 9999
-        cover = get_picture(album['cover_art_url'])
-        tracks, track = (xt[1], xt[2]) if xt else get_track(song_info)
-        album_id = album['id']
-        if track:
-            if not (xt or album_id in album_ids):
-                add_songs(tracks, mapping[album_id], album, track, cover)
-
-                album_ids.append(album_id) # Remember albums
-
-            album_length = max([e[0] for e in tracks])
-            track = f'{track[0]}/{album_length}'
-        else: album = None
-
-    if not album:
-        album_name = title + ' - Single'
-        album_artist = artist
-        album_year = song_year
-        cover = get_picture(song_cover)
-        track = '1/1'
-
-    lyrics = song_info['lyrics_data']['body']['html']
-    lyrics = BeautifulSoup(lyrics, "html.parser").get_text().strip()
-
-    if song_info['song']['youtube_url']:
-        youtube_url = song_info['song']['youtube_url']
-        youtube_start = song_info['song']['youtube_start']
-        youtube_start = int(youtube_start) if youtube_start else 0
-        try: get_youtube(song_id, youtube_url)
-        except DownloadError: song_info['song']['youtube_url'] = None
-
-    if not song_info['song']['youtube_url']:
-        youtube_start = 0
-        search_youtube(song_id, title, artists)
-
-    cut_video(song_id, youtube_start)
-    addID3(song_id, cover, lyrics, genre, artists, title,
-           str(album_year), album_name, album_artist, track)
-
-
+# select the file with the songs-list
 input_list = open_file()
 
 # change working directory
 open_file(True)
 
+print('Mapping from Queries to Genius-Paths...\n'
+      '---------------------------------------')
+
 # find the songs on Genius
 song_paths = [search_api(e) for e in input_list]
 song_paths = [e for e in song_paths if e]
 
-print('\nGet information about the songs...')
-song_infos = [get_info(e) for e in song_paths]
+print('\nGet information about the songs...\n'
+        '----------------------------------')
+
+song_infos = [get_info(e) for e in tqdm(song_paths)]
 song_infos = [e for e in song_infos if e]
 
-album_list = [(e['song']['album']['id'], get_track(e)[1])
-              for e in song_infos if 'primary_album_tracks' in e]
-album_list = [e for e in album_list if e[1]]
+album_mapping = get_mapping(song_infos)
 
-album_mapping = dict()
-for i, j in album_list:
-    if i not in album_mapping: album_mapping[i] = [j]
-    else: album_mapping[i].append(j)
+print('\n\nCollecting and rearranging data...\n'
+          '----------------------------------')
 
-print()
-for info in song_infos:
-    create_song(info, mapping = album_mapping)
+for info in tqdm(song_infos):
+    songs_list.append(Song(info))
+
+for song in songs_list:
+    ask_album(song, album_mapping)
 
 if added_songs:
-    print('\n\nGet information about additional songs...')
-    added_infos = [(e, get_info(e)) for e in added_songs]
+    print('\n\nGet information about additional songs...\n'
+              '-----------------------------------------')
+
+    added_infos = [(e, get_info(e)) for e in tqdm(added_songs)]
     added_infos = [e for e in added_infos if e[1]]
-    print()
-    for song_path, song_info in added_infos:
-        create_song(song_info, xt = added_songs[song_path])
+
+    print('\n\nCollecting and rearranging data...\n'
+              '----------------------------------')
+
+    for song_path, info in tqdm(added_infos):
+        songs_list.append(Song(info, xt = added_songs[song_path]))
+
+print('\n\nDownload and save songs on computer...\n'
+          '--------------------------------------', end = '')
+
+for song in songs_list:
+    song.to_disk()
 
 for item in listdir():
     if item.endswith(".webm"):
         remove(item)
+
+print('All songs downloaded!')
