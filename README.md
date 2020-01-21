@@ -49,7 +49,7 @@ Watch out for any webm-files in this directory as they will get deleted at the v
 
 What fallows is a mapping from you're queries from the file to genius paths using their search api.
 Lines that were given as paths don't need to be mapped and are hence skipped in this step.
-Confirm the mapping by pressing <Return>. In case of wrong mappings, simply type in the correct path by searching on genius manually.
+Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simply type in the correct path by searching on genius manually.
 
 All queries mapped, the program will now try to collect information about the songs, this doesn't require any input from the user.
 
