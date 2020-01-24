@@ -6,15 +6,22 @@ Created on Tue Jan 21 21:03:38 2020
 """
 
 from io import BytesIO
+from os.path import abspath
 from os import environ, chdir
 from PIL import Image, ImageTk
 from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas,
                      filedialog, Frame, DISABLED, NORMAL, Scrollbar)
 
+FILE_ICON = abspath('icons/file.ico')
+DICT_ICON = abspath('icons/directory.ico')
+MENU_ICON = abspath('icons/album_menu.ico')
+
 #opens a file-dialog for input-file
 def open_file():
     root = Tk()
+    root.title('choose input-file')
     root.withdraw()
+    root.iconbitmap(FILE_ICON)
 
     root.overrideredirect(True)
     root.geometry('0x0+0+0')
@@ -43,7 +50,9 @@ def open_file():
 #opens a file-dialog for output-directory
 def set_directory():
     root = Tk()
+    root.title('set directory')
     root.withdraw()
+    root.iconbitmap(DICT_ICON)
 
     root.overrideredirect(True)
     root.geometry('0x0+0+0')
@@ -68,6 +77,7 @@ def album_menu(tracks, mapping, album, album_cover):
     root = Tk()
     root.title('Album-Menu')
     root.maxsize(250, 1000)
+    root.iconbitmap(MENU_ICON)
 
     if len(tracks) > 20:
         container = Frame(root)
