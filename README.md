@@ -1,5 +1,5 @@
 # music_downloader 🎵
-This is a simple script that downloads songs automatically and tags them with information found on genius.com.
+This is a simple script that downloads songs automatically and tags them with information found on https://genius.com.
 
 ## id3 Tags
 The resulting songs will be mp3's with id3 2.3 tags for compatibility reasons with windows 10.
@@ -22,16 +22,16 @@ Once logged in set up a new API Client and generate an Access Token.
 When you run the script the first time, it will ask you to enter your generated Token. The Token then gets saved, so you dont need to enter it the next time.
 
 ## Requirements and Dependencies
-To be able to run this script you need python 3.7+.   
-You can download python from their [website](https://www.python.org/downloads/). 
+To be able to run this script you need python 3.7+.  
+You can download python from their [website](https://www.python.org/downloads/).
 
-Additionally be sure to install FFmpeg from their [site](https://www.ffmpeg.org/download.html).   
+Additionally be sure to install FFmpeg from their [site](https://www.ffmpeg.org/download.html).  
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:  
 
 | Name           | Purpose                                  | Link                                     |
-|----------------|------------------------------------------|------------------------------------------|
+|:--------------:|:-----------------------------------------|------------------------------------------|
 | Pillow         | handling cover images                    | https://pypi.org/project/Pillow/         |
 | requests       | making requests to the internet          | https://pypi.org/project/requests/       |
 | beautifulsoup4 | easy-searching in html documents         | https://pypi.org/project/beautifulsoup4/ |
@@ -41,7 +41,7 @@ Fallowing packages are requered to be installed:
 | tqdm           | displaying simple progressbars           | https://pypi.org/project/tqdm/           |
 
 You can install all these packages with **pip** or **conda**:
-```python
+```
 pip install <package_name>
 ```
  or `conda install <package_name>` respectively.
@@ -62,7 +62,7 @@ All queries mapped, the program will now try to collect information about the so
 
 After that you have the opportunity to complete the albums the songs were published in.
 
-> For each album a album-menu prompts you to select other songs from the album.
+> For each album a album-menu prompts you to select other songs from the album.  
 > If you're done, simply close the window.
 
 ![example of album-menu](screenshots/album_menu.png "that's how the album-menu should look like")
