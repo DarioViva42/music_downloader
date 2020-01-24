@@ -122,7 +122,7 @@ class Song:
             album_year = album['release_date_components']
             album_year = (str(album_year['year'])
                           if album_year else '9999')
-            cover = get_picture(album['cover_art_url'])
+            cover = xt[3] if xt else get_picture(album['cover_art_url'])
             tracks, track0 = (xt[1], xt[2]) if xt else get_track(song_info)
             album_id = album['id']
             if track0:

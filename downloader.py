@@ -14,7 +14,7 @@ from html import unescape
 from bs4 import BeautifulSoup
 from os import chdir, listdir, remove
 from os.path import isfile, dirname, abspath
-from interactions import open_file, album_menu
+from interactions import open_file, set_directory, album_menu
 
 try:
     if get_ipython().__class__.__module__ == 'ipykernel.zmqshell':
@@ -104,7 +104,7 @@ def make_Song(song_path, xt = False):
 def ask_album(song, mapping):
     if song.album_id and (song.album_id not in album_ids):
         added_songs.update(album_menu(song.tracks, mapping[song.album_id],
-                                      song.album, song.track0, song.cover))
+                                      song.album, song.cover))
 
         album_ids.append(song.album_id) # Remember albums
 
@@ -121,7 +121,7 @@ def get_mapping(songs):
 input_list = open_file()
 
 # change working directory
-open_file(True)
+set_directory()
 
 print('Mapping from Queries to Genius-Paths...\n'
       '---------------------------------------')

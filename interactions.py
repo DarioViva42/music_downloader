@@ -11,8 +11,8 @@ from PIL import Image, ImageTk
 from tkinter import (Tk, Checkbutton, IntVar, Label, Canvas,
                      filedialog, Frame, DISABLED, NORMAL, Scrollbar)
 
-#opens a file-dialog
-def open_file(directory = False):
+#opens a file-dialog for input-file
+def open_file():
     root = Tk()
     root.withdraw()
 
@@ -24,32 +24,47 @@ def open_file(directory = False):
     root.lift()
     root.focus_force()
 
-    if directory:
-        file_path = filedialog.askdirectory(
-            parent=root,
-            initialdir = environ['USERPROFILE'],
-            title = "Where do you want to save the songs?")
-    else:
-        file_path = filedialog.askopenfilename(
-            parent=root,
-            initialdir = environ['USERPROFILE'],
-            filetypes = (("Text File", "*.txt"),),
-            title = "Choose the file in wich your songs are listed...")
+    file_path = filedialog.askopenfilename(
+        parent=root,
+        initialdir = environ['USERPROFILE'],
+        filetypes = (("Text File", "*.txt"),),
+        title = "Choose the file in wich your songs are listed...")
     root.destroy()
 
-    if file_path == '': return open_file(directory)
+    if file_path == '': return open_file()
     else:
-        if directory: chdir(file_path)
-        else:
-            with open(file_path, "r", encoding="utf-8") as file:
-                content = file.read()
-            lines = [e for e in content.splitlines()
-                     if not e.isspace()]
-            if lines: return lines
-            else: return open_file()
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read()
+        lines = [e for e in content.splitlines()
+                 if not e.isspace()]
+        if lines: return lines
+        else: return open_file()
+
+#opens a file-dialog for output-directory
+def set_directory():
+    root = Tk()
+    root.withdraw()
+
+    root.overrideredirect(True)
+    root.geometry('0x0+0+0')
+    root.attributes('-alpha', 0)
+
+    root.deiconify()
+    root.lift()
+    root.focus_force()
+
+    file_path = filedialog.askdirectory(
+        parent=root,
+        initialdir = environ['USERPROFILE'],
+        title = "Where do you want to save the songs?")
+    root.destroy()
+
+    if file_path == '': set_directory()
+    else: chdir(file_path)
+
 
 # collect urls about other songs in album
-def album_menu(tracks, mapping, album, track, album_cover):
+def album_menu(tracks, mapping, album, album_cover):
     root = Tk()
     root.title('Album-Menu')
     root.maxsize(250, 1000)
@@ -103,11 +118,11 @@ def album_menu(tracks, mapping, album, track, album_cover):
     for e in mapping_index:
         box_values[e][0].set(0)
 
-    song_paths = [p for n, p, t, i in tracks
+    song_infos = [(p, (n, i)) for n, p, t, i in tracks
                   if box_values[i][0].get()]
 
     added_songs = dict()
-    for song in song_paths:
-        added_songs[song] = (album, tracks, track)
+    for path, track0 in song_infos:
+        added_songs[ path ] = (album, tracks, track0, album_cover)
 
     return added_songs
