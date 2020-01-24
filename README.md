@@ -6,15 +6,15 @@ The resulting songs will be mp3's with id3 2.3 tags for compatibility reasons wi
 Although Windows 10 should support v2.4 since the anniversary edition, it still gave me too much headaches.
 
 Fallowing Frames are filled with information:
-- TIT2 Title
-- TPE1 Artist
-- TALB Album
-- TPE2 Album-Artist
-- TCON Genre
-- TDRC Published-Year
-- TRCK Track-Number
-- USLT unsynchronized Lyrics
-- APIC Cover-Front
+- **TIT2** Title
+- **TPE1** Artist
+- **TALB** Album
+- **TPE2** Album-Artist
+- **TCON** Genre
+- **TDRC** Published-Year
+- **TRCK** Track-Number
+- **USLT** unsynchronized Lyrics
+- **APIC** Cover-Front
 
 ## Genius bearer token
 If you want to use this software head over to genius and create a developer account. https://genius.com/developers   
@@ -23,21 +23,27 @@ When you run the script the first time, it will ask you to enter your generated 
 
 ## Requirements and Dependencies
 To be able to run this script you need python 3.7+.   
-You can download python from their website. 
-https://www.python.org/downloads/
+You can download python from their [website](https://www.python.org/downloads/). 
 
-Additionally be sure to install FFmpeg from their site. https://www.ffmpeg.org/download.html   
+Additionally be sure to install FFmpeg from their [site](https://www.ffmpeg.org/download.html).   
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:
-- **requests** for making requests to the internet. https://pypi.org/project/requests/
-- **beautifulsoup4** for easy-searching in html documents. https://pypi.org/project/beautifulsoup4/
-- **pydub** for cutting and converting audio-files. https://pypi.org/project/pydub/
-- **Pillow** for handling cover images. https://pypi.org/project/Pillow/
-- **youtube_dl** for downloading and searching youtube-videos. https://pypi.org/project/youtube_dl/
-- **mutagen** for taging mp3-files with id3 tags. https://pypi.org/project/mutagen/
+| Name               | Purpose                                  | Link                                     |
+|:------------------ |:----------------------------------------:|:---------------------------------------- |
+| **Pillow**         | handling cover images                    | https://pypi.org/project/Pillow/         |
+| **requests**       | making requests to the internet          | https://pypi.org/project/requests/       |
+| **beautifulsoup4** | easy-searching in html documents         | https://pypi.org/project/beautifulsoup4/ |
+| **pydub**          | cutting and converting audio-files       | https://pypi.org/project/pydub/          |
+| **youtube_dl**     | downloading and searching youtube-videos | https://pypi.org/project/youtube_dl/     |
+| **mutagen**        | taging mp3-files with id3 tags           | https://pypi.org/project/mutagen/        |
+| **tqdm**           | displaying simple progressbars           | https://pypi.org/project/tqdm/           |
 
-You can install all these packages with pip or or conda using `pip install <package_name>` or <code>conda&nbsp;install&nbsp;<package_name></code> respectively.
+You can install all these packages with **pip** or **conda**:
+```python
+pip install <package_name>
+```
+ or `conda install <package_name>` respectively.
 
 ## Usage
 Start the script with typing `python downloader.py` in the console.
@@ -54,6 +60,11 @@ Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simpl
 All queries mapped, the program will now try to collect information about the songs, this doesn't require any input from the user.
 
 After that you have the ability to complete the albums the songs were published in.
+
+> For each album a album-menu prompts you to select other songs from the album. If you're done, simply close the window.
+
+![example of album-menu](screenshots/album_menu.png "that's how the album-menu should look like")
+
 Having checked all the songs you want from a given album, you can simply close the selection window and the script proceeds.
 The script now downloads the song and tags it with id3 tags.
 
