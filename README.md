@@ -1,4 +1,4 @@
-# music_downloader
+# music_downloader 🎵
 This is a simple script that downloads songs automatically and tags them with information found on genius.com.
 
 ## id3 Tags
@@ -17,9 +17,9 @@ Fallowing Frames are filled with information:
 - **APIC** Cover-Front
 
 ## Genius bearer token
-If you want to use this software head over to genius and create a developer account. https://genius.com/developers   
+If you want to use this software head over to [genius](https://genius.com/developers/) and create a developer account.
 Once logged in set up a new API Client and generate an Access Token.
-When you run the script the first time, it will ask you to enter your generated Token, wich then gets saved so you dont need to enter it the next time.
+When you run the script the first time, it will ask you to enter your generated Token. The Token then gets saved, so you dont need to enter it the next time.
 
 ## Requirements and Dependencies
 To be able to run this script you need python 3.7+.   
@@ -30,7 +30,7 @@ The installation-folder needs to be added to the PATH, so that python is able to
 
 Fallowing packages are requered to be installed:
 | Name               | Purpose                                  | Link                                     |
-|:------------------ |:----------------------------------------:|:---------------------------------------- |
+| ------------------ |:----------------------------------------:| ---------------------------------------- |
 | **Pillow**         | handling cover images                    | https://pypi.org/project/Pillow/         |
 | **requests**       | making requests to the internet          | https://pypi.org/project/requests/       |
 | **beautifulsoup4** | easy-searching in html documents         | https://pypi.org/project/beautifulsoup4/ |
@@ -59,13 +59,14 @@ Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simpl
 
 All queries mapped, the program will now try to collect information about the songs, this doesn't require any input from the user.
 
-After that you have the ability to complete the albums the songs were published in.
+After that you have the opportunity to complete the albums the songs were published in.
 
-> For each album a album-menu prompts you to select other songs from the album. If you're done, simply close the window.
+> For each album a album-menu prompts you to select other songs from the album.
+> If you're done, simply close the window.
 
 ![example of album-menu](screenshots/album_menu.png "that's how the album-menu should look like")
 
-Having checked all the songs you want from a given album, you can simply close the selection window and the script proceeds.
-The script now downloads the song and tags it with id3 tags.
+Repeat this for every Album in your list. 
+When done, the script will download all the songs and tag them with id3 tags.
 
 Last but not least, all songs are downloaded. Have fun listening!
