@@ -6,7 +6,7 @@ Created on Tue Jan 21 21:03:38 2020
 """
 
 from logging import getLogger
-logger = getLogger('music-logger')
+logger = getLogger()
 
 from io import BytesIO
 from os.path import abspath
@@ -42,7 +42,7 @@ def open_file():
     root.destroy()
 
     if file_path == '':
-        logger.debug('Canceled filedialog')
+        logger.info('Canceled filedialog')
         return open_file()
     else:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -79,10 +79,10 @@ def set_directory():
     root.destroy()
 
     if file_path == '':
-        logger.debug('Canceled filedialog')
+        logger.info('Canceled filedialog')
         set_directory()
     else:
-        logger.debug(f'Changed working-directory to {file_path}')
+        logger.info(f'Changed working-directory to {file_path}')
         chdir(file_path)
 
 

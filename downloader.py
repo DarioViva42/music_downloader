@@ -5,15 +5,30 @@ Created on Fri Nov 29 23:32:02 2019
 @author: DarioViva
 """
 
-from logging import getLogger, Formatter, FileHandler
-logger = getLogger('music-logger')
+from os import chdir, listdir, remove
+from os.path import isfile, dirname, abspath
+from logging import getLogger, Formatter, FileHandler, basicConfig
 
+# Change directoy to the script's location
+chdir(dirname(abspath(__file__)))
+
+basicConfig()
+logger = getLogger()
+logger.setLevel(15)
+
+# disable logging to stdout
+stdout = logger.handlers[0]
+stdout.close()
+logger.removeHandler(stdout)
+
+# set up logging to file
 fh = FileHandler('information.log', mode='w')
-fh.setLevel(0)
+fh.setLevel(15)
 formatter = Formatter('[%(asctime)s] %(levelname)8s - %(message)s',
                       datefmt='%Y-%m-%d %H:%M:%S')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+
 logger.info("Start of logging")
 
 from song import Song
@@ -23,8 +38,6 @@ from json import loads
 from requests import get
 from html import unescape
 from bs4 import BeautifulSoup
-from os import chdir, listdir, remove
-from os.path import isfile, dirname, abspath
 from interactions import open_file, set_directory, album_menu
 
 try:
@@ -38,19 +51,16 @@ except NameError:
 base_url = 'https://genius.com'
 search_url = "https://api.genius.com/search"
 
-# Change directoy to the script's location
-chdir(dirname(abspath(__file__)))
-
 if isfile('token'):
     with open('token', 'rb') as file:
         token = file.read().decode('ascii')
-        logger.debug('Token read from file')
+        logger.info('Token read from file')
 else:
     token = input('Please, input your genius access-token.\n')
     with open('token', 'wb') as file:
         print()
         file.write(token.encode('ascii'))
-        logger.debug('Token written to file')
+        logger.info('Token written to file')
 
 bearer_token = f'Bearer {token}'
 headers = {'Authorization': bearer_token}
@@ -120,7 +130,7 @@ def make_Song(song_path, xt = False):
     json_string = song_info.attrs['content']
     json_string = json_string.replace('&quot;', '\\"')
     info = loads(unescape(json_string))
-    logger.debug(f'Collected info about {song_path}')
+    logger.info(f'Collected info about {song_path}')
     if xt: return Song(info, added_songs[song_path])
     else: return Song(info)
 

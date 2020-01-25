@@ -6,7 +6,7 @@ Created on Mon Jan 20 20:19:03 2020
 """
 
 from logging import getLogger
-logger = getLogger('music-logger')
+logger = getLogger()
 
 from PIL import Image
 from time import sleep
@@ -41,7 +41,7 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     audio['TDRC'] = TDRC(encoding = 3, text = album_year)
 
     audio.save(v2_version=3, v23_sep='; ')
-    logger.debug(f'{title} tagged')
+    logger.info(f'{title} tagged')
 
 def rep_chars(s):
     if type(s) == list:
@@ -66,7 +66,7 @@ def get_picture(picture_url):  #Image.open(BytesIO(picture))
             imgByteArr = BytesIO()
             picture.save(imgByteArr, format='JPEG')
             picture = imgByteArr.getvalue()
-            logger.debug('Cover succesfully resized and converted')
+            logger.info('Cover succesfully resized and converted')
             return picture
         except (OSError, ConnectionError):
             logger.error(f"Something didn't work with {picture_url}")
@@ -93,7 +93,7 @@ def get_youtube(song_id, youtube_url):
     logger.info(f'Try to download {youtube_url}')
     with YoutubeDL(options) as ydl: ydl.download([youtube_url])
     while not isfile(options['outtmpl']): sleep(1)
-    logger.debug(f'{song_id} downloaded from {youtube_url}')
+    logger.info(f'{song_id} downloaded from {youtube_url}')
 
 def search_youtube(song_id, title, artists):
     while True:
@@ -103,7 +103,7 @@ def search_youtube(song_id, title, artists):
             with YoutubeDL(options) as ydl:
                 ydl.download([f"ytsearch:{title} {' '.join(artists)}"])
             while not isfile(options['outtmpl']): sleep(1)
-            logger.debug(f'{title} downloaded succesfully')
+            logger.info(f'{title} downloaded succesfully')
             break
         except DownloadError:
             logger.error(f"Youtube didn't download {title} correctly")
@@ -157,6 +157,9 @@ class Song:
             cover = get_picture(song_cover)
             track = '1/1'
 
+        state = song_info['song']['lyrics_state']
+        if state != 'complete':
+            logger.critical(f'Lyrics for {title} are marked as {state}')
         lyrics = song_info['lyrics_data']['body']['html']
         lyrics = BeautifulSoup(lyrics, "html.parser").get_text().strip()
 
