@@ -62,7 +62,8 @@ Watch out for any webm-files in this directory as they will get deleted at the v
 
 2. What fallows is a mapping from you're queries from the file to genius paths using their search api.
 Lines that were given as paths don't need to be mapped and are hence skipped in this step.
-Confirm the mapping by pressing <kbd>Return</kbd>. In case of wrong mappings, simply type in the correct path by searching on genius manually. Please mind that by pressing <kbd>Ctrl</kbd>+<kbd>C</kbd> you will terminate the script instead of copying text.
+Confirm the mapping by pressing <kbd>Return</kbd>. In case of wrong mappings, simply type in the correct path by searching on genius manually.
+> Please mind that by pressing <kbd>Ctrl</kbd>+<kbd>C</kbd> you will terminate the script instead of copying text.
 
 3. All queries mapped, the program will now try to collect information about the songs, this doesn't require any input from the user.
 
