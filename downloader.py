@@ -44,13 +44,13 @@ chdir(dirname(abspath(__file__)))
 if isfile('token'):
     with open('token', 'rb') as file:
         token = file.read().decode('ascii')
-        logger.info('Token read from file')
+        logger.debug('Token read from file')
 else:
     token = input('Please, input your genius access-token.\n')
     with open('token', 'wb') as file:
         print()
         file.write(token.encode('ascii'))
-        logger.info('Token written to file')
+        logger.debug('Token written to file')
 
 bearer_token = f'Bearer {token}'
 headers = {'Authorization': bearer_token}
@@ -66,7 +66,7 @@ def search_api(user_in):
         while True:
             try: r = get(search_url, params=params, headers=headers)
             except ConnectionError:
-                logger.warning(f"{user_in} wasn't handled correctly")
+                logger.error(f'"{user_in}" wasn\'t handled correctly')
                 sleep(1)
                 continue
             if r.status_code == 200: break
@@ -84,19 +84,19 @@ def search_api(user_in):
                 print()
                 logger.info(f'{top_result} was corrected to {correction}')
                 return correction
-            logger.info(f'{user_in} mapped to {top_result}')
+            logger.info(f'"{user_in}" mapped to {top_result}')
             return top_result
         try:
-            logger.warning(f'No song found with {user_in}')
+            logger.warning(f'No song found with "{user_in}"')
             user_in = user_in[user_in.index(' '):].lstrip()
-            logger.info(f'Try searching for {user_in}')
+            logger.info(f'Try searching for "{user_in}"')
         except ValueError:
             correction = input('No song found with this query...\n')
             if len(correction):
                 print()
-                logger.info(f'User commited {correction}')
+                logger.info(f'User commited "{correction}"')
                 return correction
-            logger.warning('Nothing found and nothing commited')
+            logger.critical('Nothing found and nothing commited')
             return None
 
 def make_Song(song_path, xt = False):
@@ -104,11 +104,11 @@ def make_Song(song_path, xt = False):
     while True:
         try: page = get(URL)
         except ConnectionError:
-            logger.warning(f"Couldn't connect with {song_path}")
+            logger.error(f"Couldn't connect with {song_path}")
             sleep(1)
             continue
         if page.status_code == 404:
-            logger.warning(f'{song_path} not found on genius')
+            logger.critical(f'{song_path} not found on genius')
             return None
         if page.status_code == 200:
             break
@@ -120,7 +120,7 @@ def make_Song(song_path, xt = False):
     json_string = song_info.attrs['content']
     json_string = json_string.replace('&quot;', '\\"')
     info = loads(unescape(json_string))
-    logger.info(f'Collected info about {song_path}')
+    logger.debug(f'Collected info about {song_path}')
     if xt: return Song(info, added_songs[song_path])
     else: return Song(info)
 

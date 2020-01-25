@@ -42,7 +42,7 @@ def open_file():
     root.destroy()
 
     if file_path == '':
-        logger.info('Canceled filedialog')
+        logger.debug('Canceled filedialog')
         return open_file()
     else:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -79,10 +79,10 @@ def set_directory():
     root.destroy()
 
     if file_path == '':
-        logger.info('Canceled filedialog')
+        logger.debug('Canceled filedialog')
         set_directory()
     else:
-        logger.info(f'Changed working-directory to {file_path}')
+        logger.debug(f'Changed working-directory to {file_path}')
         chdir(file_path)
 
 
@@ -149,5 +149,5 @@ def album_menu(tracks, mapping, album, album_cover):
     for path, track0 in song_infos:
         added_songs[ path ] = (album, tracks, track0, album_cover)
 
-    logger.info(f"Added {len(added_songs)} from {album['name']}")
+    logger.info(f"Added {len(added_songs)} songs from {album['name']}")
     return added_songs

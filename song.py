@@ -41,7 +41,7 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     audio['TDRC'] = TDRC(encoding = 3, text = album_year)
 
     audio.save(v2_version=3, v23_sep='; ')
-    logger.info(f'{title} tagged')
+    logger.debug(f'{title} tagged')
 
 def rep_chars(s):
     if type(s) == list:
@@ -66,10 +66,10 @@ def get_picture(picture_url):  #Image.open(BytesIO(picture))
             imgByteArr = BytesIO()
             picture.save(imgByteArr, format='JPEG')
             picture = imgByteArr.getvalue()
-            logger.info('Cover succesfully resized and converted')
+            logger.debug('Cover succesfully resized and converted')
             return picture
         except (OSError, ConnectionError):
-            logger.warning(f"Something didn't work with {picture_url}")
+            logger.error(f"Something didn't work with {picture_url}")
             sleep(1)
 
 def get_track(song_info):
@@ -93,7 +93,7 @@ def get_youtube(song_id, youtube_url):
     logger.info(f'Try to download {youtube_url}')
     with YoutubeDL(options) as ydl: ydl.download([youtube_url])
     while not isfile(options['outtmpl']): sleep(1)
-    logger.info(f'{song_id} downloaded from {youtube_url}')
+    logger.debug(f'{song_id} downloaded from {youtube_url}')
 
 def search_youtube(song_id, title, artists):
     while True:
@@ -103,10 +103,10 @@ def search_youtube(song_id, title, artists):
             with YoutubeDL(options) as ydl:
                 ydl.download([f"ytsearch:{title} {' '.join(artists)}"])
             while not isfile(options['outtmpl']): sleep(1)
-            logger.info(f'{title} downloaded succesfully')
+            logger.debug(f'{title} downloaded succesfully')
             break
         except DownloadError:
-            logger.warning(f"Youtube didn't download {title} correctly")
+            logger.error(f"Youtube didn't download {title} correctly")
             sleep(1)
 
 def cut_video(song_id, youtube_start):
