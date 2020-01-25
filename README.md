@@ -18,7 +18,7 @@ Fallowing Frames are filled with information:
 
 For more information about the ID3 standard, fallow this [link][1].
 
-## Genius bearer token
+## Genius bearer token 🔑
 If you want to use this software head over to [genius][2] and create a developer account.
 Once logged in set up a new API Client and generate an Access Token.
 When you run the script the first time, it will ask you to enter your generated Token. The Token then gets saved, so you dont need to enter it the next time.
@@ -46,15 +46,14 @@ You can install all these packages with **pip** or **conda**:
 ```
 pip install <package_name>
 ```
- or `conda install <package_name>` respectively.  
- Always keep packages up-to-date, especially **youtube_dl**. You can update it with:
- 
- ```
+or `conda install <package_name>` respectively.  
+Always keep packages up-to-date, especially **youtube_dl**. You can update it with: 
+```
 pip install --upgrade youtube_dl
 ```
 ## Usage
 1. Start the script with typing `python downloader.py` in the console.
-A filedialog asks you to locate the text-file containing your songs. This is a new-line delimited "*.txt".
+A filedialog asks you to locate the text-file containing your songs. This is a new-line delimited "\*.txt".
 The lines in this file can either be search queries or relative genius-paths (ommit the genius-domain).
 That means lines starting with a slash are interpreted as paths and all other lines function as search-queries.
 After that it promts you to choose a destination folder. This is where all of you're songs get loaded into.
@@ -62,7 +61,7 @@ Watch out for any webm-files in this directory as they will get deleted at the v
 
 2. What fallows is a mapping from you're queries from the file to genius paths using their search api.
 Lines that were given as paths don't need to be mapped and are hence skipped in this step.
-Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simply type in the correct path by searching on genius manually.
+Confirm the mapping by pressing <kbd>Return</kbd>. In case of wrong mappings, simply type in the correct path by searching on genius manually. Please mind that pressing <kbd>Ctrl</kbd>+<kbd>C</kbd> will terminate the script instead of copying text.
 
 3. All queries mapped, the program will now try to collect information about the songs, this doesn't require any input from the user.
 
