@@ -5,6 +5,17 @@ Created on Fri Nov 29 23:32:02 2019
 @author: DarioViva
 """
 
+from logging import getLogger, Formatter, FileHandler
+logger = getLogger('music-logger')
+
+fh = FileHandler('information.log', mode='w')
+fh.setLevel(0)
+formatter = Formatter('[%(asctime)s] %(levelname)8s - %(message)s',
+                      datefmt='%Y-%m-%d %H:%M:%S')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+logger.info("Start of logging")
+
 from song import Song
 from tqdm import tqdm
 from time import sleep
@@ -33,11 +44,13 @@ chdir(dirname(abspath(__file__)))
 if isfile('token'):
     with open('token', 'rb') as file:
         token = file.read().decode('ascii')
+        logger.info('Token read from file')
 else:
     token = input('Please, input your genius access-token.\n')
     with open('token', 'wb') as file:
         print()
         file.write(token.encode('ascii'))
+        logger.info('Token written to file')
 
 bearer_token = f'Bearer {token}'
 headers = {'Authorization': bearer_token}
@@ -53,11 +66,12 @@ def search_api(user_in):
         while True:
             try: r = get(search_url, params=params, headers=headers)
             except ConnectionError:
+                logger.warning(f"{user_in} wasn't handled correctly")
                 sleep(1)
                 continue
-            if r.status_code == 200:
-                break
-            else: sleep(1)
+            if r.status_code == 200: break
+            logger.warning(f'API returned status {r.status_code}')
+            sleep(1)
 
         search_results = r.json()['response']['hits']
         search_results = [e['result']['path'] for e in search_results]
@@ -68,15 +82,21 @@ def search_api(user_in):
             correction = input(top_result + '\n')
             if len(correction):
                 print()
+                logger.info(f'{top_result} was corrected to {correction}')
                 return correction
+            logger.info(f'{user_in} mapped to {top_result}')
             return top_result
         try:
+            logger.warning(f'No song found with {user_in}')
             user_in = user_in[user_in.index(' '):].lstrip()
+            logger.info(f'Try searching for {user_in}')
         except ValueError:
             correction = input('No song found with this query...\n')
             if len(correction):
                 print()
+                logger.info(f'User commited {correction}')
                 return correction
+            logger.warning('Nothing found and nothing commited')
             return None
 
 def make_Song(song_path, xt = False):
@@ -84,20 +104,23 @@ def make_Song(song_path, xt = False):
     while True:
         try: page = get(URL)
         except ConnectionError:
+            logger.warning(f"Couldn't connect with {song_path}")
             sleep(1)
             continue
         if page.status_code == 404:
+            logger.warning(f'{song_path} not found on genius')
             return None
-        if page.status_code != 200:
-            sleep(1)
         if page.status_code == 200:
             break
+        logger.warning(f'{song_path} returned status {page.status_code}')
+        sleep(1)
 
     html = BeautifulSoup(page.text, "html.parser")
     song_info = html.find("meta", {"itemprop":"page_data"})
     json_string = song_info.attrs['content']
     json_string = json_string.replace('&quot;', '\\"')
     info = loads(unescape(json_string))
+    logger.info(f'Collected info about {song_path}')
     if xt: return Song(info, added_songs[song_path])
     else: return Song(info)
 
@@ -158,3 +181,6 @@ for item in listdir():
         remove(item)
 
 print('\n\nAll songs downloaded!')
+logger.info('End of logging')
+fh.close()
+logger.removeHandler(fh)

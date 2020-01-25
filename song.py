@@ -5,6 +5,9 @@ Created on Mon Jan 20 20:19:03 2020
 @author: DarioViva
 """
 
+from logging import getLogger
+logger = getLogger('music-logger')
+
 from PIL import Image
 from time import sleep
 from io import BytesIO
@@ -38,6 +41,7 @@ def addID3(song_id, cover, lyrics, genre, artists, title,
     audio['TDRC'] = TDRC(encoding = 3, text = album_year)
 
     audio.save(v2_version=3, v23_sep='; ')
+    logger.info(f'{title} tagged')
 
 def rep_chars(s):
     if type(s) == list:
@@ -55,13 +59,18 @@ def get_artist(song_info):
 def get_picture(picture_url):  #Image.open(BytesIO(picture))
     while True:
         try:
+            logger.info(f'Try to download {picture_url}')
             picture = get(picture_url)
             picture = Image.open(BytesIO(picture.content))
             picture = picture.resize((500, 500), Image.LANCZOS)
             imgByteArr = BytesIO()
             picture.save(imgByteArr, format='JPEG')
-            return imgByteArr.getvalue()
-        except OSError: pass
+            picture = imgByteArr.getvalue()
+            logger.info('Cover succesfully resized and converted')
+            return picture
+        except (OSError, ConnectionError):
+            logger.warning(f"Something didn't work with {picture_url}")
+            sleep(1)
 
 def get_track(song_info):
     tracks = song_info['primary_album_tracks']
@@ -73,43 +82,49 @@ def get_track(song_info):
     album_track = [(e[0], e[3]) for e in tracks
                    if song_path == e[1]]
     if album_track and album_track[0][0]: album_track = album_track[0]
-    else: album_track = None
+    else:
+        logger.warning(f"{song_path} has no track")
+        album_track = None
 
     return tracks, album_track
 
 def get_youtube(song_id, youtube_url):
     options['outtmpl'] = f'{song_id}.webm'
-    with YoutubeDL(options) as ydl:
-        ydl.download([youtube_url])
-    while not isfile(options['outtmpl']):
-        sleep(1)
+    logger.info(f'Try to download {youtube_url}')
+    with YoutubeDL(options) as ydl: ydl.download([youtube_url])
+    while not isfile(options['outtmpl']): sleep(1)
+    logger.info(f'{song_id} downloaded from {youtube_url}')
 
 def search_youtube(song_id, title, artists):
     while True:
         try:
             options['outtmpl'] = f'{song_id}.webm'
+            logger.info(f"Search Youtube for {title} {' '.join(artists)}")
             with YoutubeDL(options) as ydl:
                 ydl.download([f"ytsearch:{title} {' '.join(artists)}"])
-            while not isfile(options['outtmpl']):
-                sleep(1)
+            while not isfile(options['outtmpl']): sleep(1)
+            logger.info(f'{title} downloaded succesfully')
             break
-        except DownloadError: pass
+        except DownloadError:
+            logger.warning(f"Youtube didn't download {title} correctly")
+            sleep(1)
 
 def cut_video(song_id, youtube_start):
     sound = AudioSegment.from_file(f'{song_id}.webm')
     songPart = sound[youtube_start*1000:]
     songPart.export(f'{song_id}.mp3', format="mp3")
+    logger.info(f'Cut the first {youtube_start} seconds from {song_id}')
 
 class Song:
-
     def __init__(self, song_info, xt = None):
-
         song_path = song_info['song']['path']
         title = rep_chars(song_info['song']['title'])
         song_id = song_info['song']['id']
         artist, artists = get_artist(song_info)
         song_cover = song_info['song']['song_art_image_url']
         song_year = song_info['song']['release_date_components']
+        if not song_year:
+            logger.warning(f'{title} has no publisher year')
         song_year = (str(song_year['year'])
                      if song_year else '9999')
         genre = rep_chars(song_info['song']['primary_tag']['name'])
@@ -120,6 +135,8 @@ class Song:
             album_name = rep_chars(album['name'])
             album_artist = rep_chars(album['artist']['name'])
             album_year = album['release_date_components']
+            if not album_year:
+                logger.warning(f'{album_name} has no publisher year')
             album_year = (str(album_year['year'])
                           if album_year else '9999')
             cover = xt[3] if xt else get_picture(album['cover_art_url'])
@@ -174,6 +191,7 @@ class Song:
         if self.youtube_url:
             try: get_youtube(self.song_id, self.youtube_url)
             except:
+                logger.warning(f'{self.youtube_url} is protected')
                 self.youtube_start = 0
                 search_youtube(self.song_id, self.title, self.artists)
         else:

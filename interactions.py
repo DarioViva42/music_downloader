@@ -5,6 +5,9 @@ Created on Tue Jan 21 21:03:38 2020
 @author: DarioViva
 """
 
+from logging import getLogger
+logger = getLogger('music-logger')
+
 from io import BytesIO
 from os.path import abspath
 from os import environ, chdir
@@ -38,14 +41,21 @@ def open_file():
         title = "Choose the file in wich your songs are listed...")
     root.destroy()
 
-    if file_path == '': return open_file()
+    if file_path == '':
+        logger.info('Canceled filedialog')
+        return open_file()
     else:
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
-        lines = [e for e in content.splitlines()
-                 if not e.isspace()]
-        if lines: return lines
-        else: return open_file()
+        raw_lines = content.splitlines()
+        lines = [e for e in raw_lines if not e.isspace()]
+        if lines:
+            logger.info(f'Read in {len(lines)} lines from {file_path}')
+            logger.info(f'Ommited {len(raw_lines)-len(lines)} lines')
+            return lines
+        else:
+            logger.info(f'{file_path} is empty')
+            return open_file()
 
 #opens a file-dialog for output-directory
 def set_directory():
@@ -68,8 +78,12 @@ def set_directory():
         title = "Where do you want to save the songs?")
     root.destroy()
 
-    if file_path == '': set_directory()
-    else: chdir(file_path)
+    if file_path == '':
+        logger.info('Canceled filedialog')
+        set_directory()
+    else:
+        logger.info(f'Changed working-directory to {file_path}')
+        chdir(file_path)
 
 
 # collect urls about other songs in album
@@ -135,4 +149,5 @@ def album_menu(tracks, mapping, album, album_cover):
     for path, track0 in song_infos:
         added_songs[ path ] = (album, tracks, track0, album_cover)
 
+    logger.info(f"Added {len(added_songs)} from {album['name']}")
     return added_songs
