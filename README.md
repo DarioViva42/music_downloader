@@ -16,18 +16,18 @@ Fallowing Frames are filled with information:
 - **USLT** unsynchronized Lyrics
 - **APIC** Cover-Front
 
-For more information about the ID3 standard, fallow this [link](http://id3.org/id3v2.3.0 "more information about ID3-Frames")
+For more information about the ID3 standard, fallow this [link][1].
 
 ## Genius bearer token
-If you want to use this software head over to [genius](https://genius.com/developers/) and create a developer account.
+If you want to use this software head over to [genius][2] and create a developer account.
 Once logged in set up a new API Client and generate an Access Token.
 When you run the script the first time, it will ask you to enter your generated Token. The Token then gets saved, so you dont need to enter it the next time.
 
 ## Requirements and Dependencies
-To be able to run this script you need python 3.7+.  
-You can download python from their [website](https://www.python.org/downloads/).
+To be able to run this script you need python 3.7+. 
+You can download python from their [website][3].
 
-Additionally be sure to install FFmpeg from their [site](https://www.ffmpeg.org/download.html).  
+Additionally be sure to install FFmpeg from their [site][4].  
 The installation-folder needs to be added to the PATH, so that python is able to use it.
 
 Fallowing packages are requered to be installed:  
@@ -46,8 +46,12 @@ You can install all these packages with **pip** or **conda**:
 ```
 pip install <package_name>
 ```
- or `conda install <package_name>` respectively.
-
+ or `conda install <package_name>` respectively.  
+ Always keep packages up-to-date, especially **youtube_dl**. You can update it with:
+ 
+ ```
+pip install --upgrade youtube_dl
+```
 ## Usage
 1. Start the script with typing `python downloader.py` in the console.
 A filedialog asks you to locate the text-file containing your songs. This is a new-line delimited "*.txt".
@@ -67,10 +71,15 @@ Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simpl
 > For each album a album-menu prompts you to select other songs from the album.  
 > If you're done, simply close the window. Repeat this for every Album in your list.
 
-![example of album-menu](screenshots/album_menu.png "that's how the album-menu should look like")
+![example of album-menu](../screenshots/album_menu.png "that's how the album-menu should look like")
 
 5. In the next step, the script will download all the songs and tag them with id3 tags.
 
 6. Last but not least, all songs are downloaded. Have fun listening!
 
 *Check the information.log file if anything weird happened during runtime.*
+
+[1]: http://id3.org/id3v2.3.0/ "more information about ID3-Frames"
+[2]: https://genius.com/developers/ "create a developer account"
+[3]: https://www.python.org/downloads/ "download python"
+[4]: https://www.ffmpeg.org/download.html "download ffmpeg"
