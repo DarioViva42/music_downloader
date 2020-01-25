@@ -71,7 +71,7 @@ Confirm the mapping by pressing &lt;Return&gt;. In case of wrong mappings, simpl
 > For each album a album-menu prompts you to select other songs from the album.  
 > If you're done, simply close the window. Repeat this for every Album in your list.
 
-![example of album-menu](../screenshots/album_menu.png "that's how the album-menu should look like")
+![example of album-menu](./screenshots/album_menu.png "that's how the album-menu should look like")
 
 5. In the next step, the script will download all the songs and tag them with id3 tags.
 
