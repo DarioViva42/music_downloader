@@ -5,8 +5,8 @@ Created on Fri Nov 29 23:32:02 2019
 @author: DarioViva
 """
 
+from os.path import dirname, abspath
 from os import chdir, listdir, remove
-from os.path import isfile, dirname, abspath
 from logging import getLogger, Formatter, FileHandler, basicConfig
 
 # Change directoy to the script's location
@@ -22,7 +22,7 @@ stdout.close()
 logger.removeHandler(stdout)
 
 # set up logging to file
-fh = FileHandler('information.log', mode='w')
+fh = FileHandler('information.log', mode = 'w', encoding = 'utf-8')
 fh.setLevel(15)
 formatter = Formatter('[%(asctime)s] %(levelname)8s - %(message)s',
                       datefmt='%Y-%m-%d %H:%M:%S')
@@ -40,41 +40,18 @@ from html import unescape
 from bs4 import BeautifulSoup
 from interactions import open_file, set_directory, album_menu
 
-try:
-    if get_ipython().__class__.__module__ == 'ipykernel.zmqshell':
-        NEW_LINE = ''
-    else:
-        NEW_LINE = '\n'
-except NameError:
-    NEW_LINE = '\n'
-
 base_url = 'https://genius.com'
-search_url = "https://api.genius.com/search"
-
-if isfile('token'):
-    with open('token', 'rb') as file:
-        token = file.read().decode('ascii')
-        logger.info('Token read from file')
-else:
-    token = input('Please, input your genius access-token.\n')
-    with open('token', 'wb') as file:
-        print()
-        file.write(token.encode('ascii'))
-        logger.info('Token written to file')
-
-bearer_token = f'Bearer {token}'
-headers = {'Authorization': bearer_token}
+search_url = f"{base_url}/api/search/song"
 
 album_ids = list()
 added_songs = dict()
 
 def search_api(user_in):
     if user_in[0] == '/': return user_in
-    print(user_in, end = NEW_LINE)
     while True:
         params  = {'q': user_in}
         while True:
-            try: r = get(search_url, params=params, headers=headers)
+            try: r = get(search_url, params=params)
             except ConnectionError:
                 logger.error(f'"{user_in}" wasn\'t handled correctly')
                 sleep(1)
@@ -83,17 +60,9 @@ def search_api(user_in):
             logger.warning(f'API returned status {r.status_code}')
             sleep(1)
 
-        search_results = r.json()['response']['hits']
-        search_results = [e['result']['path'] for e in search_results]
-        search_results = [e for e in search_results
-                          if e[:15] != '/Screen-genius-']
+        search_results = r.json()['response']['sections'][0]['hits']
         if len(search_results):
-            top_result = search_results[0]
-            correction = input(top_result + '\n')
-            if len(correction):
-                print()
-                logger.info(f'{top_result} was corrected to {correction}')
-                return correction
+            top_result = search_results[0]['result']['path']
             logger.info(f'"{user_in}" mapped to {top_result}')
             return top_result
         try:
@@ -101,12 +70,7 @@ def search_api(user_in):
             user_in = user_in[user_in.index(' '):].lstrip()
             logger.info(f'Try searching for "{user_in}"')
         except ValueError:
-            correction = input('No song found with this query...\n')
-            if len(correction):
-                print()
-                logger.info(f'User commited "{correction}"')
-                return correction
-            logger.critical('Nothing found and nothing commited')
+            logger.critical('Absolutely nothing found for this query')
             return None
 
 def make_Song(song_path, xt = False):
@@ -160,7 +124,7 @@ print('Mapping from Queries to Genius-Paths...\n'
       '---------------------------------------')
 
 # find the songs on Genius
-song_paths = [search_api(e) for e in input_list]
+song_paths = [search_api(e) for e in tqdm(input_list)]
 song_paths = [e for e in song_paths if e]
 
 print('\nCollect information about the songs.\n'
