@@ -36,7 +36,6 @@ from tqdm import tqdm
 from time import sleep
 from json import loads
 from requests import get
-from html import unescape
 from bs4 import BeautifulSoup
 from interactions import open_file, set_directory, album_menu
 
@@ -92,8 +91,7 @@ def make_Song(song_path, xt = False):
     html = BeautifulSoup(page.text, "html.parser")
     song_info = html.find("meta", {"itemprop":"page_data"})
     json_string = song_info.attrs['content']
-    json_string = json_string.replace('&quot;', '\\"')
-    info = loads(unescape(json_string))
+    info = loads(json_string)
     logger.info(f'Collected info about {song_path}')
     if xt: return Song(info, added_songs[song_path])
     else: return Song(info)
