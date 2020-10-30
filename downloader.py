@@ -10,6 +10,7 @@ from os import chdir, listdir, remove
 from logging import getLogger, Formatter, FileHandler, basicConfig
 
 # Change directoy to the script's location
+# cd C:\Users\dario\Documents\Python Scripts\music_downloader
 chdir(dirname(abspath(__file__)))
 
 basicConfig()
@@ -84,12 +85,15 @@ def make_Song(song_path, xt = False):
             logger.critical(f'{song_path} not found on genius')
             return None
         if page.status_code == 200:
-            break
+            html = BeautifulSoup(page.text, "html.parser")
+            song_info = html.find("meta", {"itemprop":"page_data"})
+            if song_info is not None: break
+            logger.warning(f"The page_data was not found with {song_path}")
+            sleep(1)
+            continue
         logger.warning(f'{song_path} returned status {page.status_code}')
         sleep(1)
 
-    html = BeautifulSoup(page.text, "html.parser")
-    song_info = html.find("meta", {"itemprop":"page_data"})
     json_string = song_info.attrs['content']
     info = loads(json_string)
     logger.info(f'Collected info about {song_path}')

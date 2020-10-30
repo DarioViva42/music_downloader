@@ -96,14 +96,20 @@ def get_youtube(song_id, youtube_url):
     logger.info(f'{song_id} downloaded from {youtube_url}')
 
 def search_youtube(song_id, title, artists):
+    base_ytb = 'http://www.youtube.com'
+    query = f"{title} {' '.join(artists)}"
+    query = query.replace('%', '%25').replace('+', '%2B').replace(' ', '+')
+    query = query.replace('=', '%3D').replace('/', '%2F').replace('&', '%26')
+    query = query.replace('?', '%3F').replace('#', '%23')
+    
+    r = get(base_ytb + f'/results?search_query={query}')
+    
+    found = r.text.find('/watch?v=')
+    youtube_url = base_ytb + r.text[found:found+20]
+    logger.info(f'{title} in Youtube-Search resulted in {youtube_url}')
     while True:
         try:
-            options['outtmpl'] = f'{song_id}.webm'
-            logger.info(f"Search Youtube for {title} {' '.join(artists)}")
-            with YoutubeDL(options) as ydl:
-                ydl.download([f"ytsearch:{title} {' '.join(artists)}"])
-            while not isfile(options['outtmpl']): sleep(1)
-            logger.info(f'{title} downloaded succesfully')
+            get_youtube(song_id, youtube_url)
             break
         except DownloadError:
             logger.error(f"Youtube didn't download {title} correctly")
